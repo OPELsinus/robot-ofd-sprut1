@@ -62,13 +62,32 @@ cas_password = global_env_data['cas_password']
 postgre_ip = global_env_data['postgre_ip']
 postgre_port = global_env_data['postgre_port']
 
+
+download_path = Path.home().joinpath('downloads')
+working_path = root_path.joinpath('working_path')
+
+db_host = global_env_data['postgre_ip']
+db_port = global_env_data['postgre_port']
+db_name = global_env_data['postgre_db_name']
+db_user = global_env_data['postgre_db_username']
+db_pass = global_env_data['postgre_db_password']
+
+
+robot_name = 'robot-ofd-sprut'
+
 # ? PROJECT
-project_name = 'REPLACE ME'  # ! FIXME
-chat_id = ''  # ! FIXME
+project_name = robot_name  # ! FIXME
+# chat_id = ''  # ! FIXME
 
 project_path = global_path.joinpath(f'.agent').joinpath(project_name).joinpath(get_hostname())
 project_path.mkdir(exist_ok=True, parents=True)
 config_path = project_path.joinpath('config.json')
+config_data = json_read(config_path)
+chat_id = config_data['chat_id']
+ardak_path = config_data['ardak_path']
+jadyra_path = config_data['jadyra_path']
+mapping_path = config_data['mapping_path']
+
 
 log_path = project_path.joinpath(f'{sys.argv[1]}.log' if len(sys.argv) > 1 else 'dev.log')
 logger = init_logger(tg_token=tg_token, chat_id=chat_id, log_path=log_path)

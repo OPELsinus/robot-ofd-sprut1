@@ -32,14 +32,12 @@ def init_logger(logger_name: str = None, level: int = None, logger_format: str =
     logger_name = logger_name or 'rpa.robot'
     level = level or logging.INFO
     logger_format = logger_format or '%(asctime)s||%(levelname)s||%(message)s'
-    tg_logger_format = '%(message)s'
     date_format = '%Y-%m-%d,%H:%M:%S'
     backup_count = 50
 
     logging.basicConfig(level=level, format=logger_format, datefmt=date_format)
     logger = logging.getLogger(logger_name)
     formatter = ArgsFormatter(logger_format, datefmt=date_format)
-    tg_formatter = ArgsFormatter(tg_logger_format, datefmt=date_format)
 
     console_handler = logging.StreamHandler()
     console_handler.setFormatter(formatter)
@@ -48,7 +46,7 @@ def init_logger(logger_name: str = None, level: int = None, logger_format: str =
 
     if tg_token and chat_id:
         post_handler = PostHandler(tg_token, chat_id)
-        post_handler.setFormatter(tg_formatter)
+        post_handler.setFormatter(formatter)
         post_handler.setLevel(level)
         logger.addHandler(post_handler)
     if log_path:

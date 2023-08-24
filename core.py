@@ -57,7 +57,7 @@ class Sprut(App):
             "visible_only": True, "enabled_only": True, "found_index": 0, "parent": None
         }, timeout=180)
 
-    def open(self, value):
+    def open(self, value, switch=True):
         self.search({
             "title": "", "class_name": "TvmsDBTreeList", "control_type": "Pane",
             "visible_only": True, "enabled_only": True, "found_index": 0
@@ -66,10 +66,11 @@ class Sprut(App):
             "title": "", "class_name": "TvmsDBTreeList", "control_type": "Pane",
             "visible_only": True, "enabled_only": True, "found_index": 0
         }).type_keys('~', clear=False)
-        self.parent_switch({
-            "title_re": f"^.*{value}.*$", "class_name": "Treport_frm_main", "control_type": "Window",
-            "visible_only": True, "enabled_only": True, "found_index": 0, "parent": None
-        })
+        if switch:
+            self.parent_switch({
+                "title_re": f"^.*{value}.*$", "class_name": "Treport_frm_main", "control_type": "Window",
+                "visible_only": True, "enabled_only": True, "found_index": 0, "parent": None
+            })
 
     def search(self, selector, value, replace=False):
         if replace:
