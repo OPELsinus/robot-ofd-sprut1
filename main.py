@@ -119,6 +119,66 @@ def insert_data_in_db(started_time, store_name, short_name, status, responsible,
     conn.close()
 
 
+def update_data_in_db(started_time, store_name, short_name, status, responsible, found_difference, count, error_reason, error_saved_path, execution_time):
+    conn = psycopg2.connect(host=db_host, port=db_port, database=db_name, user=db_user, password=db_pass)
+
+    query_delete = f"""
+        delete from ROBOT.{robot_name.replace("-", "_")} where store_name = '{store_name}'
+    """
+
+    query = f"""        
+        INSERT INTO ROBOT.{robot_name.replace("-", "_")}
+            (started_time, ended_time, store_name, short_name, status, responsible, found_difference, count, error_reason, error_saved_path, execution_time)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        ON DUPLICATE KEY UPDATE
+            status = %s,
+            started_time = %s,
+            ended_time = %s,
+            short_name = %s,
+            responsible = %s,
+            found_difference = %s,
+            count = %s,
+            error_reason = %s,
+            error_saved_path = %s,
+            execution_time = %s;
+    """
+
+    values = (
+        started_time.strftime("%d.%m.%Y %H:%M:%S.%f"),
+        datetime.datetime.now().strftime("%d.%m.%Y %H:%M:%S.%f"),
+        str(store_name),
+        str(short_name),
+        str(status),
+        str(responsible),
+        str(found_difference),
+        str(count),
+        str(error_reason),
+        str(error_saved_path),
+        str(execution_time)
+    )
+
+    cursor = conn.cursor()
+
+    conn.autocommit = True
+    try:
+        cursor.execute(query_delete)
+    except Exception as e:
+        logger.info(f'GOVNO {e}')
+        pass
+
+    try:
+        cursor.execute(query, values)
+
+    except Exception as e:
+        conn.rollback()
+        logger.info(f"Error: {e}")
+
+    conn.commit()
+
+    cursor.close()
+    conn.close()
+
+
 def get_all_data():
     conn = psycopg2.connect(host=db_host, port=db_port, database=db_name, user=db_user, password=db_pass)
     table_create_query = f'''
@@ -138,7 +198,7 @@ def get_all_data():
 
 
 def write_branches_in_their_big_excels(end_date_):
-    logger.info('Started write_branches_in_their_big_excels')
+    logger.info('Начинаем запись касс по их Экселям')
 
     # ? Create new page
     excel = win32.gencache.EnsureDispatch('Excel.Application')
@@ -268,12 +328,12 @@ def write_branches_in_their_big_excels(end_date_):
         except Exception as error:
             logger.info(error)
     print('Finishing1')
-    logger.info('Finishing1')
-    empty_row = baishukova_ws.Cells.SpecialCells(win32.constants.xlCellTypeLastCell).Row
-    baishukova_ws.Cells(empty_row, 1).EntireRow.Interior.ColorIndex = 40
+    logger.info('Заканчиваем1')
+    # empty_row = baishukova_ws.Cells.SpecialCells(win32.constants.xlCellTypeLastCell).Row
+    # baishukova_ws.Cells(empty_row, 1).EntireRow.Interior.ColorIndex = 40
 
-    empty_row = nusipova_ws.Cells.SpecialCells(win32.constants.xlCellTypeLastCell).Row
-    nusipova_ws.Cells(empty_row, 1).EntireRow.Interior.ColorIndex = 40
+    # empty_row = nusipova_ws.Cells.SpecialCells(win32.constants.xlCellTypeLastCell).Row
+    # nusipova_ws.Cells(empty_row, 1).EntireRow.Interior.ColorIndex = 40
 
     baishukova_wb.Save()
     baishukova_wb.Close()
@@ -281,7 +341,7 @@ def write_branches_in_their_big_excels(end_date_):
     nusipova_wb.Save()
     nusipova_wb.Close()
     excel.Application.Quit()
-    logger.info('Finishing2')
+    logger.info('Заканчиваем2')
     print('Finishing2')
 
 
@@ -401,10 +461,10 @@ def send_in_cache(sprut, today):
 
 def create_z_reports(branches, start_date, end_date):
 
-    for branch in branches[::]:
+    for ind_, branch in enumerate(branches[::]):
         for i in range(5):
             try:
-                logger.info(f'Started {branch}')
+                logger.info(f'Начали: {ind_}, {branch}')
 
                 sprut = Sprut("MAGNUM")
                 sprut.run()
@@ -436,7 +496,6 @@ def create_z_reports(branches, start_date, end_date):
                 # sprut.get_pane(1).type_keys(sprut.Keys.F9)
 
                 sprut.parent_back(1)
-
 
                 sprut.find_element({"title": "", "class_name": "", "control_type": "SplitButton",
                                     "visible_only": True, "enabled_only": True, "found_index": 4}).click()
@@ -719,31 +778,31 @@ if __name__ == '__main__':
 
     for i in range(5):
         try:
-            try:
-                sql_delete_table()
-            except:
-                pass
-
-            sql_create_table()
-
-            sprut = Sprut("MAGNUM")
-            sprut.run()
-            try:
-                df2 = get_all_existing_branches_from_sprut(sprut)
-            except Exception as e:
-                logger.info(e)
-                sleep(1000)
-
-            try:
-                df = get_all_data()
-
-                branches_to_execute = get_branches_to_execute(df, df2)
-
-                print(df)
-
-            except:
-                branches_to_execute = df2
-
+            # try:
+            #     sql_delete_table()
+            # except:
+            #     pass
+            #
+            # sql_create_table()
+            #
+            # sprut = Sprut("MAGNUM")
+            # sprut.run()
+            # try:
+            #     df2 = get_all_existing_branches_from_sprut(sprut)
+            # except Exception as e:
+            #     logger.info(e)
+            #     sleep(1000)
+            #
+            # try:
+            #     df = get_all_data()
+            #
+            #     branches_to_execute = get_branches_to_execute(df, df2)
+            #
+            #     print(df)
+            #
+            # except:
+            #     branches_to_execute = df2
+            #
             branches = ['Алматинский филиал №1 ТОО "Magnum Cash&Carry"', 'Товарищество с ограниченной ответственностью Magnum Cash&Carry(777)', 'Алматинский филиал №2 ТОО "Magnum Cash&Carry"', 'Алматинский филиал №3  ТОО "Magnum Cash&Carry"', 'Карагандинский Филиал №1 ТОО "Magnum Cash&Carry"', 'Филиал №1 ТОО "MAGNUM CASH&CARRY" в г.Астана', 'Филиал №4 ТОО "Magnum Cash&Carry" в г. Алматы', 'Филиал ТОО "Magnum Cash&Carry" №5 в г. Алматы', 'Алматинский филиал №6 ТОО "Magnum Cash&Carry"', 'Филиал Тест ТОО "Magnum cash&carry"', 'Алматинский филиал №7 ТОО "Magnum Cash&Carry"', 'Филиал ТОО "Magnum cash&carry" в г. Шымкент', 'Алматинский филиал №8 ТОО "Magnum Cash&Carry"', 'Алматинский филиал №10 ТОО "Magnum Cash&Carry"', 'Алматинский филиал №9 ТОО "Magnum Cash&Carry"', 'Алматинский филиал №11 ТОО "Magnum Cash&Carry"', 'Алматинский филиал №12 ТОО "Magnum Cash&Carry"', 'Филиал №2 ТОО "Magnum Cash&Carry" в г. Шымкент', 'Филиал ТОО "Magnum cash&carry" в г. Талдыкорган',
                         'Алматинский филиал №14 ТОО "Magnum Cash&Carry"', 'Филиал №2 ТОО "MAGNUM CASH&CARRY" в г.Астана', 'Филиал №3 ТОО "MAGNUM CASH&CARRY" в г.Астана', 'Филиал №2 ТОО "Magnum Cash&Carry" в г.Талдыкорган', 'Алматинский филиал №16 ТОО "Magnum Cash&Carry"', 'Алматинский филиал №15 ТОО "Magnum Cash&Carry"', 'Алматинский филиал №17 ТОО "Magnum Cash&Carry"', 'Филиал №1 ТОО "Magnum Cash&Carry" в г.Каскелен', 'Алматинский филиал №20 ТОО "Magnum Cash&Carry"', 'Алматинский филиал №18 ТОО "Magnum Cash&Carry"', 'Алматинский филиал №19 ТОО "Magnum Cash&Carry"', 'Филиал №4 ТОО "Magnum Cash&Carry" в г.Шымкент', 'Карагандинский филиал №2 ТОО "Magnum Cash&Carry"', 'Алматинский филиал №21 ТОО "Magnum Cash&Carry"', 'Филиал №1 ТОО "Magnum Cash&Carry" в г. Петропавловск', 'Алматинский филиал №22 ТОО "Magnum Cash&Carry"', 'Алматинский филиал №23 ТОО "Magnum Cash&Carry"', 'Филиал №3 ТОО "Magnum Cash&Carry" в г. Шымкент', 'Алматинский филиал №24 ТОО "Magnum Cash&Carry"',
                         'Филиал №4 ТОО "MAGNUM CASH&CARRY" в г.Астана', 'Филиал №5 ТОО "MAGNUM CASH&CARRY" в г.Астана', 'Алматинский филиал №25 ТОО "Magnum Cash&Carry"', 'Филиал №1 в г. Кызылорда ТОО "Magnum Cash&Carry"', 'Алматинский филиал №26 ТОО "Magnum Cash&Carry"', 'Филиал №6 ТОО "MAGNUM CASH&CARRY" в г.Астана', 'Филиал №7 ТОО "MAGNUM CASH&CARRY" в г.Астана', 'Филиал №8 ТОО "MAGNUM CASH&CARRY" в г.Астана', 'Филиал №9 ТОО "MAGNUM CASH&CARRY" в г.Астана', 'Филиал №10 ТОО "MAGNUM CASH&CARRY" в г.Астана', 'Филиал №1 ТОО "Magnum Cash&Carry" в г. Тараз', 'Алматинский филиал №32 ТОО "Magnum Cash&Carry"', 'Алматинский филиал №28 ТОО "Magnum Cash&Carry"', 'Алматинский филиал №29 ТОО "Magnum Cash&Carry"', 'Алматинский филиал №30 ТОО "Magnum Cash&Carry"', 'Алматинский филиал №31 ТОО "Magnum Cash&Carry"', 'Алматинский филиал №33 ТОО Magnum Cash&Carry', 'Алматинский филиал №34 ТОО Magnum Cash&Carry', 'Алматинский филиал №35 ТОО Magnum Cash&Carry',
@@ -761,19 +820,19 @@ if __name__ == '__main__':
                         'Филиал №7 ТОО "Magnum Cash&Carry" в г. Тараз', 'Филиал №8 ТОО "Magnum Cash&Carry" в г. Тараз', 'Филиал №9 ТОО "Magnum Cash&Carry" в г. Тараз', 'Филиал №10 ТОО "Magnum Cash&Carry" в г. Тараз', 'Филиал №66 ТОО "MAGNUM CASH&CARRY" в г.Астана', 'Филиал №67 ТОО "MAGNUM CASH&CARRY" в г.Астана', 'Филиал №35 ТОО «MAGNUM СASH&CARRY» в г. Шымкент', 'Филиал №23 ТОО "Magnum Cash&Carry" в г. Петропавловск', 'Филиал №76 ТОО «MAGNUM CASH&CARRY» в г. Алматы', 'Филиал №1 Маркет холл ТОО "Magnum Cash&Carry" в г. Алматы', 'Филиал №68 ТОО "MAGNUM CASH&CARRY" в г.Астана', 'Филиал №69 ТОО "MAGNUM CASH&CARRY" в г.Астана', 'Филиал №71 ТОО "MAGNUM CASH&CARRY" в г.Астана', 'Филиал №73 ТОО "MAGNUM CASH&CARRY" в г.Астана', 'Филиал №70 ТОО "MAGNUM CASH&CARRY" в г.Астана', 'Филиал №74 ТОО "MAGNUM CASH&CARRY" в г.Астана', 'Филиал №72 ТОО "MAGNUM CASH&CARRY" в г.Астана', 'Филиал №75 ТОО "MAGNUM CASH&CARRY" в г.Астана', 'Филиал №77 ТОО "Magnum Сash&Сarry" в г. Алматы',
                         'Филиал №78 ТОО "Magnum Сash&Сarry" в г. Алматы', 'Филиал №76 ТОО "MAGNUM CASH&CARRY" в г.Астана', 'Филиал №77 ТОО "MAGNUM CASH&CARRY" в г.Астана', 'Филиал №79 ТОО "Magnum Сash&Сarry" в г. Алматы', 'Алматинский филиал №80 ТОО "Magnum Cash&Carry"', 'Алматинский филиал №81 ТОО "Magnum Cash&Carry"', 'Филиал №82 ТОО "Magnum Сash&Сarry" в г. Алматы', 'Филиал №83 ТОО "Magnum Сash&Сarry" в г. Алматы', 'Филиал №4 ТОО «МAGNUM СASH&CARRY» в г. Туркестан', 'Филиал №79 ТОО "MAGNUM CASH&CARRY" в г.Астана', 'Филиал №84 ТОО "Magnum Сash&Сarry" в г. Алматы', 'Филиал №85 ТОО "Magnum Сash&Сarry" в г. Алматы', 'Филиал №80 ТОО "MAGNUM CASH&CARRY" в г.Астана', 'Филиал №81 ТОО "MAGNUM CASH&CARRY" в г.Астана', 'Филиал №86 ТОО "Magnum Сash&Сarry" в г. Алматы', 'Филиал №82 ТОО "MAGNUM CASH&CARRY" в г.Астана', 'Филиал №83 ТОО "MAGNUM CASH&CARRY" в г.Астана', 'Филиал №74 ТОО "Magnum Сash&Сarry" в г. Алматы'
                         ]
+            #
+            # print(branches_to_execute, len(branches_to_execute))
+            # logger.info(branches_to_execute)
+            # send_in_cache(sprut, today)
+            # sprut.quit()
+            #
+            create_z_reports(branches, start_date, end_date)
 
-            print(branches_to_execute, len(branches_to_execute))
-            logger.info(branches_to_execute)
-            send_in_cache(sprut, today)
-            sprut.quit()
-
-            create_z_reports(branches_to_execute, start_date, end_date)
-
-            logger.info('Finishing')
+            logger.info('Заканчиваем')
             print('Finishing')
             write_branches_in_their_big_excels(end_date)
             print('Finished')
-            logger.info('Finished')
+            logger.info('Закончили')
 
             smtp_send(r"""Добрый день!
 Расхождения, выявленные в отчете 100912 отражены в сводной таблице. Готовые сводные таблицы размещены на сетевой папке M:\Stuff\_06_Бухгалтерия\1. ОК и ЗО\алмата\отчет по контролю касс 2022г\Жадыра Робот; M:\Stuff\_06_Бухгалтерия\1. ОК и ЗО\алмата\отчет по контролю касс 2022г\Ардак Робот""",
