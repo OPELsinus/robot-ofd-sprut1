@@ -103,7 +103,7 @@ def insert_data_in_db(started_time, store_name, short_name, status, responsible,
     try:
         cursor.execute(query_delete)
     except Exception as e:
-        logger.info(f'GOVNO {e}')
+        print(f'GOVNO {e}')
         pass
 
     try:
@@ -111,7 +111,7 @@ def insert_data_in_db(started_time, store_name, short_name, status, responsible,
 
     except Exception as e:
         conn.rollback()
-        logger.info(f"Error: {e}")
+        print(f"Error: {e}")
 
     conn.commit()
 
@@ -163,7 +163,7 @@ def update_data_in_db(started_time, store_name, short_name, status, responsible,
     try:
         cursor.execute(query_delete)
     except Exception as e:
-        logger.info(f'GOVNO {e}')
+        print(f'GOVNO {e}')
         pass
 
     try:
@@ -171,7 +171,7 @@ def update_data_in_db(started_time, store_name, short_name, status, responsible,
 
     except Exception as e:
         conn.rollback()
-        logger.info(f"Error: {e}")
+        print(f"Error: {e}")
 
     conn.commit()
 
@@ -198,7 +198,7 @@ def get_all_data():
 
 
 def write_branches_in_their_big_excels(end_date_):
-    logger.info('Начинаем запись касс по их Экселям')
+    print('Начинаем запись касс по их Экселям')
 
     # ? Create new page
     excel = win32.gencache.EnsureDispatch('Excel.Application')
@@ -220,7 +220,7 @@ def write_branches_in_their_big_excels(end_date_):
 
         for sheet in wb.Worksheets:
             if months[month - 1].lower() in str(sheet.Name).lower() and (year in str(sheet.Name) or year[2:] in str(sheet.Name)):
-                logger.info(sheet.Name)
+                print(sheet.Name)
                 ws = wb.Worksheets(sheet.Name)
                 found = True
 
@@ -326,9 +326,9 @@ def write_branches_in_their_big_excels(end_date_):
                     insert_data_in_db(started_time, branch, short_name, 'failed', 'Baishukova', '', 0, str(ex), '', str(end_time - start_time))
 
         except Exception as error:
-            logger.info(error)
+            print(error)
     print('Finishing1')
-    logger.info('Заканчиваем1')
+    print('Заканчиваем1')
     # empty_row = baishukova_ws.Cells.SpecialCells(win32.constants.xlCellTypeLastCell).Row
     # baishukova_ws.Cells(empty_row, 1).EntireRow.Interior.ColorIndex = 40
 
@@ -341,17 +341,17 @@ def write_branches_in_their_big_excels(end_date_):
     nusipova_wb.Save()
     nusipova_wb.Close()
     excel.Application.Quit()
-    logger.info('Заканчиваем2')
+    print('Заканчиваем2')
     print('Finishing2')
 
 
 def send_in_cache(sprut, today):
     sprut.open("Контроль передачи данных", switch=False)
 
-    logger.info('Switching')
+    print('Switching')
     sprut.parent_switch({"title_re": ".Контроль передачи данных.", "class_name": "Tcontrolcache_fm_main",
                          "control_type": "Window", "visible_only": True, "enabled_only": True, "found_index": 0}).set_focus()
-    logger.info('Switched')
+    print('Switched')
     sprut.find_element({"title": "Журналы", "class_name": "", "control_type": "MenuItem",
                         "visible_only": True, "enabled_only": True, "found_index": 0}).click()
 
@@ -381,17 +381,17 @@ def send_in_cache(sprut, today):
     sprut.find_element({"title_re": ".", "class_name": "TvmsComboBox", "control_type": "Pane",
                         "visible_only": True, "enabled_only": True, "found_index": 1}).click()
 
-    logger.info('Clicked list')
+    print('Clicked list')
     keyboard.send_keys("{DOWN}" * 4)
     keyboard.send_keys("{ENTER}")
 
-    logger.info('Clicked item')
+    print('Clicked item')
     sprut.find_element({"title": "", "class_name": "TvmsBitBtn", "control_type": "Button",
                         "visible_only": True, "enabled_only": True, "found_index": 0}).click()
 
     sprut.find_element({"title": "И", "class_name": "TvmsBitBtn", "control_type": "Button",
                         "visible_only": True, "enabled_only": True, "found_index": 0}).click()
-    logger.info('KEKUS')
+    print('KEKUS')
     sprut.find_element({"title": "Торговая площадка", "class_name": "", "control_type": "ListItem",
                         "visible_only": True, "enabled_only": True, "found_index": 0}).click()
 
@@ -429,7 +429,7 @@ def send_in_cache(sprut, today):
             break
         except:
             pass
-    logger.info('clicked')
+    print('clicked')
     while True:
         try:
             sprut.find_element({"title": "Ввод", "class_name": "TvmsBitBtn", "control_type": "Button",
@@ -437,7 +437,7 @@ def send_in_cache(sprut, today):
             break
         except:
             pass
-    logger.info('clicked1')
+    print('clicked1')
 
     sprut.parent_back(1)
 
@@ -464,7 +464,7 @@ def create_z_reports(branches, start_date, end_date):
     for ind_, branch in enumerate(branches[::]):
         for i in range(5):
             try:
-                logger.info(f'Начали: {ind_}, {branch}')
+                print(f'Начали: {ind_}, {branch}')
 
                 sprut = Sprut("MAGNUM")
                 sprut.run()
@@ -573,24 +573,24 @@ def create_z_reports(branches, start_date, end_date):
                 sprut.quit()
 
                 print('Finished branch')
-                logger.info('Finished branch')
+                print('Finished branch')
 
                 break
 
             except Exception as exc:
-                logger.info(f'Error occured at {branch}: {exc}')
+                print(f'Error occured at {branch}: {exc}')
                 sleep(10)
 
     print('-----------------------------------------------------------------------')
     print('Finished CREATING Z REPORTS')
     print('-----------------------------------------------------------------------')
 
-    logger.info('Finished CREATING Z REPORTS')
+    print('Finished CREATING Z REPORTS')
 
 
 def wait_loading(branch):
     print('Started loading')
-    logger.info('Started loading')
+    print('Started loading')
     branch = branch.replace('.', '').replace('"', '')
     found = False
     while True:
@@ -602,7 +602,7 @@ def wait_loading(branch):
             days_since_creation = time_difference / (60 * 60 * 24)
 
             if int(days_since_creation) <= 1 and file[0] != '$' and '.' in file and 'xl' in file and '100912' in file:
-                logger.info(file)
+                print(file)
                 type = '.' + file.split('.')[1]
                 shutil.move(os.path.join(download_path, file), os.path.join(os.path.join(download_path, 'reports'), branch + type))
                 found = True
@@ -610,7 +610,7 @@ def wait_loading(branch):
         if found:
             break
     print('Finished loading')
-    logger.info('Finished loading')
+    print('Finished loading')
 
 
 def get_all_existing_branches_from_sprut(sprut):
@@ -735,15 +735,15 @@ def get_branches_to_execute(df1, branches_with_quote):
         return cell.replace('.xlsx', '')
 
     df1['store_name'] = df1['store_name'].apply(apply_replacements1)
-    logger.info(df1['store_name'])
+    print(df1['store_name'])
 
     import numpy as np
 
-    logger.info(f"{len(np.setdiff1d(np.asarray(branches_without_quote['stores']), np.asarray(df1['store_name'])))}")
+    print(f"{len(np.setdiff1d(np.asarray(branches_without_quote['stores']), np.asarray(df1['store_name'])))}")
 
     skipped_branches = np.setdiff1d(np.asarray(branches_without_quote['stores']), np.asarray(df1['store_name']))
-    logger.info(skipped_branches)
-    logger.info('-------------------------------------------------------------------------')
+    print(skipped_branches)
+    print('-------------------------------------------------------------------------')
 
     branches_to_execute_ = []
 
@@ -755,11 +755,11 @@ def get_branches_to_execute(df1, branches_with_quote):
 
             diff = Levenshtein.distance(branch_, branch1_)
             if diff <= 2:
-                logger.info(f'TO EXECUTE: {diff} | {branch}, {branch1}')
+                print(f'TO EXECUTE: {diff} | {branch}, {branch1}')
                 branches_to_execute_.append(branch)
                 break
 
-    logger.info(branches_to_execute_)
+    print(branches_to_execute_)
 
     return branches_to_execute_
 
@@ -774,35 +774,39 @@ if __name__ == '__main__':
     end_date = (today - datetime.timedelta(days=1)).strftime('%d.%m.%Y')
     today = today.strftime('%d.%m.%Y')
 
+    start_date = '26.08.2023'
+    end_date = '26.08.2023'
     print(start_date, end_date)
 
+    logger.info(f'Робот запустился на даты {start_date}, {end_date}')
     for i in range(5):
         try:
-            # try:
-            #     sql_delete_table()
-            # except:
-            #     pass
-            #
-            # sql_create_table()
-            #
-            # sprut = Sprut("MAGNUM")
-            # sprut.run()
-            # try:
-            #     df2 = get_all_existing_branches_from_sprut(sprut)
-            # except Exception as e:
-            #     logger.info(e)
-            #     sleep(1000)
-            #
-            # try:
-            #     df = get_all_data()
-            #
-            #     branches_to_execute = get_branches_to_execute(df, df2)
-            #
-            #     print(df)
-            #
-            # except:
-            #     branches_to_execute = df2
-            #
+            try:
+                sql_delete_table()
+            except:
+                pass
+
+            sql_create_table()
+
+            sprut = Sprut("MAGNUM")
+            sprut.run()
+            try:
+                df2 = get_all_existing_branches_from_sprut(sprut)
+            except Exception as e:
+                pass
+                # print(e)
+                # sleep(1000)
+
+            try:
+                df = get_all_data()
+
+                branches_to_execute = get_branches_to_execute(df, df2)
+
+                print(df)
+
+            except:
+                branches_to_execute = df2
+
             branches = ['Алматинский филиал №1 ТОО "Magnum Cash&Carry"', 'Товарищество с ограниченной ответственностью Magnum Cash&Carry(777)', 'Алматинский филиал №2 ТОО "Magnum Cash&Carry"', 'Алматинский филиал №3  ТОО "Magnum Cash&Carry"', 'Карагандинский Филиал №1 ТОО "Magnum Cash&Carry"', 'Филиал №1 ТОО "MAGNUM CASH&CARRY" в г.Астана', 'Филиал №4 ТОО "Magnum Cash&Carry" в г. Алматы', 'Филиал ТОО "Magnum Cash&Carry" №5 в г. Алматы', 'Алматинский филиал №6 ТОО "Magnum Cash&Carry"', 'Филиал Тест ТОО "Magnum cash&carry"', 'Алматинский филиал №7 ТОО "Magnum Cash&Carry"', 'Филиал ТОО "Magnum cash&carry" в г. Шымкент', 'Алматинский филиал №8 ТОО "Magnum Cash&Carry"', 'Алматинский филиал №10 ТОО "Magnum Cash&Carry"', 'Алматинский филиал №9 ТОО "Magnum Cash&Carry"', 'Алматинский филиал №11 ТОО "Magnum Cash&Carry"', 'Алматинский филиал №12 ТОО "Magnum Cash&Carry"', 'Филиал №2 ТОО "Magnum Cash&Carry" в г. Шымкент', 'Филиал ТОО "Magnum cash&carry" в г. Талдыкорган',
                         'Алматинский филиал №14 ТОО "Magnum Cash&Carry"', 'Филиал №2 ТОО "MAGNUM CASH&CARRY" в г.Астана', 'Филиал №3 ТОО "MAGNUM CASH&CARRY" в г.Астана', 'Филиал №2 ТОО "Magnum Cash&Carry" в г.Талдыкорган', 'Алматинский филиал №16 ТОО "Magnum Cash&Carry"', 'Алматинский филиал №15 ТОО "Magnum Cash&Carry"', 'Алматинский филиал №17 ТОО "Magnum Cash&Carry"', 'Филиал №1 ТОО "Magnum Cash&Carry" в г.Каскелен', 'Алматинский филиал №20 ТОО "Magnum Cash&Carry"', 'Алматинский филиал №18 ТОО "Magnum Cash&Carry"', 'Алматинский филиал №19 ТОО "Magnum Cash&Carry"', 'Филиал №4 ТОО "Magnum Cash&Carry" в г.Шымкент', 'Карагандинский филиал №2 ТОО "Magnum Cash&Carry"', 'Алматинский филиал №21 ТОО "Magnum Cash&Carry"', 'Филиал №1 ТОО "Magnum Cash&Carry" в г. Петропавловск', 'Алматинский филиал №22 ТОО "Magnum Cash&Carry"', 'Алматинский филиал №23 ТОО "Magnum Cash&Carry"', 'Филиал №3 ТОО "Magnum Cash&Carry" в г. Шымкент', 'Алматинский филиал №24 ТОО "Magnum Cash&Carry"',
                         'Филиал №4 ТОО "MAGNUM CASH&CARRY" в г.Астана', 'Филиал №5 ТОО "MAGNUM CASH&CARRY" в г.Астана', 'Алматинский филиал №25 ТОО "Magnum Cash&Carry"', 'Филиал №1 в г. Кызылорда ТОО "Magnum Cash&Carry"', 'Алматинский филиал №26 ТОО "Magnum Cash&Carry"', 'Филиал №6 ТОО "MAGNUM CASH&CARRY" в г.Астана', 'Филиал №7 ТОО "MAGNUM CASH&CARRY" в г.Астана', 'Филиал №8 ТОО "MAGNUM CASH&CARRY" в г.Астана', 'Филиал №9 ТОО "MAGNUM CASH&CARRY" в г.Астана', 'Филиал №10 ТОО "MAGNUM CASH&CARRY" в г.Астана', 'Филиал №1 ТОО "Magnum Cash&Carry" в г. Тараз', 'Алматинский филиал №32 ТОО "Magnum Cash&Carry"', 'Алматинский филиал №28 ТОО "Magnum Cash&Carry"', 'Алматинский филиал №29 ТОО "Magnum Cash&Carry"', 'Алматинский филиал №30 ТОО "Magnum Cash&Carry"', 'Алматинский филиал №31 ТОО "Magnum Cash&Carry"', 'Алматинский филиал №33 ТОО Magnum Cash&Carry', 'Алматинский филиал №34 ТОО Magnum Cash&Carry', 'Алматинский филиал №35 ТОО Magnum Cash&Carry',
@@ -820,19 +824,19 @@ if __name__ == '__main__':
                         'Филиал №7 ТОО "Magnum Cash&Carry" в г. Тараз', 'Филиал №8 ТОО "Magnum Cash&Carry" в г. Тараз', 'Филиал №9 ТОО "Magnum Cash&Carry" в г. Тараз', 'Филиал №10 ТОО "Magnum Cash&Carry" в г. Тараз', 'Филиал №66 ТОО "MAGNUM CASH&CARRY" в г.Астана', 'Филиал №67 ТОО "MAGNUM CASH&CARRY" в г.Астана', 'Филиал №35 ТОО «MAGNUM СASH&CARRY» в г. Шымкент', 'Филиал №23 ТОО "Magnum Cash&Carry" в г. Петропавловск', 'Филиал №76 ТОО «MAGNUM CASH&CARRY» в г. Алматы', 'Филиал №1 Маркет холл ТОО "Magnum Cash&Carry" в г. Алматы', 'Филиал №68 ТОО "MAGNUM CASH&CARRY" в г.Астана', 'Филиал №69 ТОО "MAGNUM CASH&CARRY" в г.Астана', 'Филиал №71 ТОО "MAGNUM CASH&CARRY" в г.Астана', 'Филиал №73 ТОО "MAGNUM CASH&CARRY" в г.Астана', 'Филиал №70 ТОО "MAGNUM CASH&CARRY" в г.Астана', 'Филиал №74 ТОО "MAGNUM CASH&CARRY" в г.Астана', 'Филиал №72 ТОО "MAGNUM CASH&CARRY" в г.Астана', 'Филиал №75 ТОО "MAGNUM CASH&CARRY" в г.Астана', 'Филиал №77 ТОО "Magnum Сash&Сarry" в г. Алматы',
                         'Филиал №78 ТОО "Magnum Сash&Сarry" в г. Алматы', 'Филиал №76 ТОО "MAGNUM CASH&CARRY" в г.Астана', 'Филиал №77 ТОО "MAGNUM CASH&CARRY" в г.Астана', 'Филиал №79 ТОО "Magnum Сash&Сarry" в г. Алматы', 'Алматинский филиал №80 ТОО "Magnum Cash&Carry"', 'Алматинский филиал №81 ТОО "Magnum Cash&Carry"', 'Филиал №82 ТОО "Magnum Сash&Сarry" в г. Алматы', 'Филиал №83 ТОО "Magnum Сash&Сarry" в г. Алматы', 'Филиал №4 ТОО «МAGNUM СASH&CARRY» в г. Туркестан', 'Филиал №79 ТОО "MAGNUM CASH&CARRY" в г.Астана', 'Филиал №84 ТОО "Magnum Сash&Сarry" в г. Алматы', 'Филиал №85 ТОО "Magnum Сash&Сarry" в г. Алматы', 'Филиал №80 ТОО "MAGNUM CASH&CARRY" в г.Астана', 'Филиал №81 ТОО "MAGNUM CASH&CARRY" в г.Астана', 'Филиал №86 ТОО "Magnum Сash&Сarry" в г. Алматы', 'Филиал №82 ТОО "MAGNUM CASH&CARRY" в г.Астана', 'Филиал №83 ТОО "MAGNUM CASH&CARRY" в г.Астана', 'Филиал №74 ТОО "Magnum Сash&Сarry" в г. Алматы'
                         ]
-            #
+
             # print(branches_to_execute, len(branches_to_execute))
-            # logger.info(branches_to_execute)
+            # print(branches_to_execute)
             # send_in_cache(sprut, today)
             # sprut.quit()
-            #
+
             create_z_reports(branches, start_date, end_date)
 
-            logger.info('Заканчиваем')
+            # print('Заканчиваем')
             print('Finishing')
             write_branches_in_their_big_excels(end_date)
             print('Finished')
-            logger.info('Закончили')
+            # print('Закончили')
 
             smtp_send(r"""Добрый день!
 Расхождения, выявленные в отчете 100912 отражены в сводной таблице. Готовые сводные таблицы размещены на сетевой папке M:\Stuff\_06_Бухгалтерия\1. ОК и ЗО\алмата\отчет по контролю касс 2022г\Жадыра Робот; M:\Stuff\_06_Бухгалтерия\1. ОК и ЗО\алмата\отчет по контролю касс 2022г\Ардак Робот""",
@@ -844,9 +848,9 @@ if __name__ == '__main__':
         except Exception as error:
             if i == 4:
                 failed = True
-            logger.info(f'Error occured: {error}\nRetried times: {i + 1}')
+            # print(f'Error occured: {error}\nRetried times: {i + 1}')
             # sleep(2000)
-
+    logger.info(f'Робот сломался')
     smtp_send(r"""Добрый день!
     Робот не отработал ни одну из 5 попыток""",
               to=['Abdykarim.D@magnum.kz', 'Mukhtarova@magnum.kz', 'Sakpankulova@magnum.kz', 'Nusipova@magnum.kz', 'Baishukova@magnum.kz'],

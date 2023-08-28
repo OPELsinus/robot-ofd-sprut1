@@ -1,4 +1,5 @@
 import logging
+from contextlib import suppress
 from pathlib import Path
 from typing import Union
 
@@ -27,7 +28,8 @@ def init_logger(logger_name: str = None, level: int = None, logger_format: str =
         def emit(self, record):
             data = self.format(record)
             data = {'chat_id': self.chat_id, 'text': str(data)}
-            requests.post(self.url, json=data, verify=False)
+            with suppress(Exception):
+                requests.post(self.url, json=data, verify=False, timeout=1)
 
     logger_name = logger_name or 'rpa.robot'
     level = level or logging.INFO
