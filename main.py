@@ -2,6 +2,8 @@ import datetime
 import os
 import shutil
 import time
+from contextlib import suppress
+from pathlib import Path
 
 import Levenshtein
 import pandas as pd
@@ -11,9 +13,10 @@ import win32com.client as win32
 import psycopg2 as psycopg2
 from pywinauto import keyboard
 
-from config import logger, download_path, robot_name, db_host, db_port, db_name, db_user, db_pass, tg_token, chat_id, smtp_host, smtp_author, jadyra_path, ardak_path, mapping_path
+from config import logger, download_path, robot_name, db_host, db_port, db_name, db_user, db_pass, tg_token, chat_id, smtp_host, smtp_author, jadyra_path, ardak_path, mapping_path, global_password, global_username
 from core import Sprut
 from tools.clipboard import clipboard_get
+from tools.net_use import net_use
 from tools.smtp import smtp_send
 from tools.tg import tg_send
 
@@ -285,6 +288,7 @@ def write_branches_in_their_big_excels(end_date_):
                 wb0.Close(False)
 
         return [ws2, at_least_one_found, count]
+
 
     baishukova_wb, baishukova_ws = open_excel(ardak_path)
     nusipova_wb, nusipova_ws = open_excel(jadyra_path)
@@ -774,10 +778,13 @@ if __name__ == '__main__':
     end_date = (today - datetime.timedelta(days=1)).strftime('%d.%m.%Y')
     today = today.strftime('%d.%m.%Y')
 
-    start_date = '26.08.2023'
-    end_date = '26.08.2023'
+    # start_date = '26.08.2023'
+    # end_date = '26.08.2023'
     print(start_date, end_date)
-
+    net_use(Path(ardak_path).parent.parent, global_username, global_password)
+    net_use(ardak_path, global_username, global_password)
+    net_use(jadyra_path, global_username, global_password)
+    exit()
     logger.info(f'Робот запустился на даты {start_date}, {end_date}')
     for i in range(5):
         try:
@@ -825,33 +832,41 @@ if __name__ == '__main__':
                         'Филиал №78 ТОО "Magnum Сash&Сarry" в г. Алматы', 'Филиал №76 ТОО "MAGNUM CASH&CARRY" в г.Астана', 'Филиал №77 ТОО "MAGNUM CASH&CARRY" в г.Астана', 'Филиал №79 ТОО "Magnum Сash&Сarry" в г. Алматы', 'Алматинский филиал №80 ТОО "Magnum Cash&Carry"', 'Алматинский филиал №81 ТОО "Magnum Cash&Carry"', 'Филиал №82 ТОО "Magnum Сash&Сarry" в г. Алматы', 'Филиал №83 ТОО "Magnum Сash&Сarry" в г. Алматы', 'Филиал №4 ТОО «МAGNUM СASH&CARRY» в г. Туркестан', 'Филиал №79 ТОО "MAGNUM CASH&CARRY" в г.Астана', 'Филиал №84 ТОО "Magnum Сash&Сarry" в г. Алматы', 'Филиал №85 ТОО "Magnum Сash&Сarry" в г. Алматы', 'Филиал №80 ТОО "MAGNUM CASH&CARRY" в г.Астана', 'Филиал №81 ТОО "MAGNUM CASH&CARRY" в г.Астана', 'Филиал №86 ТОО "Magnum Сash&Сarry" в г. Алматы', 'Филиал №82 ТОО "MAGNUM CASH&CARRY" в г.Астана', 'Филиал №83 ТОО "MAGNUM CASH&CARRY" в г.Астана', 'Филиал №74 ТОО "Magnum Сash&Сarry" в г. Алматы'
                         ]
 
-            # print(branches_to_execute, len(branches_to_execute))
-            # print(branches_to_execute)
-            # send_in_cache(sprut, today)
-            # sprut.quit()
+            print(branches_to_execute, len(branches_to_execute))
+            print(branches_to_execute)
+            send_in_cache(sprut, today)
+            sprut.quit()
 
             create_z_reports(branches, start_date, end_date)
 
             # print('Заканчиваем')
             print('Finishing')
-            write_branches_in_their_big_excels(end_date)
+            for tries in range(5):
+                try:
+                    write_branches_in_their_big_excels(end_date)
+                    break
+                except:
+                    pass
+
             print('Finished')
             # print('Закончили')
 
             smtp_send(r"""Добрый день!
 Расхождения, выявленные в отчете 100912 отражены в сводной таблице. Готовые сводные таблицы размещены на сетевой папке M:\Stuff\_06_Бухгалтерия\1. ОК и ЗО\алмата\отчет по контролю касс 2022г\Жадыра Робот; M:\Stuff\_06_Бухгалтерия\1. ОК и ЗО\алмата\отчет по контролю касс 2022г\Ардак Робот""",
                       to=['Abdykarim.D@magnum.kz', 'Mukhtarova@magnum.kz', 'Sakpankulova@magnum.kz', 'Nusipova@magnum.kz', 'Baishukova@magnum.kz'],
-                      subject=f'Сверка чеков ОФД-Спрут robot за {today}', username=smtp_author, url=smtp_host)
+                      subject=f'Сверка чеков ОФД-Спрут robot за {start_date}', username=smtp_author, url=smtp_host)
 
-            exit()
+            failed = False
+            break
 
         except Exception as error:
             if i == 4:
                 failed = True
             # print(f'Error occured: {error}\nRetried times: {i + 1}')
             # sleep(2000)
-    logger.info(f'Робот сломался')
-    smtp_send(r"""Добрый день!
-    Робот не отработал ни одну из 5 попыток""",
-              to=['Abdykarim.D@magnum.kz', 'Mukhtarova@magnum.kz', 'Sakpankulova@magnum.kz', 'Nusipova@magnum.kz', 'Baishukova@magnum.kz'],
-              subject=f'Сверка чеков ОФД-Спрут robot за {today}', username=smtp_author, url=smtp_host)
+    if failed:
+        logger.info(f'Робот сломался')
+        smtp_send(r"""Добрый день!
+        Робот не отработал ни одну из 5 попыток""",
+                  to=['Abdykarim.D@magnum.kz', 'Mukhtarova@magnum.kz', 'Sakpankulova@magnum.kz', 'Nusipova@magnum.kz', 'Baishukova@magnum.kz'],
+                  subject=f'Сверка чеков ОФД-Спрут robot за {today}', username=smtp_author, url=smtp_host)

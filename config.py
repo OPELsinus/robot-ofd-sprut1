@@ -86,7 +86,7 @@ config_data = json_read(config_path)
 chat_id = config_data['chat_id']
 ardak_path = config_data['ardak_path']
 jadyra_path = config_data['jadyra_path']
-print(ardak_path, jadyra_path)
+
 mapping_path = config_data['mapping_path']
 
 
