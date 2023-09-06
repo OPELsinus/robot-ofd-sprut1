@@ -9,6 +9,15 @@ from pyinstaller_versionfile import MetaData, create_versionfile_from_input_file
 root_path = Path(sys.argv[0]).parent
 
 
+
+
+
+
+
+
+
+
+
 def yaml_read(path: Path):
     with open(str(path), 'r', encoding='utf-8') as fp:
         data = yaml.safe_load(fp)

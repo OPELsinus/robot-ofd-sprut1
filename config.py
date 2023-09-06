@@ -1,3 +1,4 @@
+import socket
 import sys
 from pathlib import Path
 
@@ -72,8 +73,9 @@ db_name = global_env_data['postgre_db_name']
 db_user = global_env_data['postgre_db_username']
 db_pass = global_env_data['postgre_db_password']
 
-
 robot_name = 'robot-ofd-sprut'
+
+ip_address = socket.gethostbyname(socket.gethostname())
 
 # ? PROJECT
 project_name = robot_name  # ! FIXME
@@ -86,9 +88,9 @@ config_data = json_read(config_path)
 chat_id = config_data['chat_id']
 ardak_path = config_data['ardak_path']
 jadyra_path = config_data['jadyra_path']
-
 mapping_path = config_data['mapping_path']
-
+saving_path = global_path.joinpath(f".agent\\{robot_name}\\Output\\reports_ofd")
+saving_path.mkdir(exist_ok=True, parents=True)
 
 log_path = project_path.joinpath(f'{sys.argv[1]}.log' if len(sys.argv) > 1 else 'dev.log')
 logger = init_logger(tg_token=tg_token, chat_id=chat_id, log_path=log_path)
