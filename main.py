@@ -239,10 +239,10 @@ def write_branches_in_their_big_excels(end_date_):
 
     def open_excel(path):
         found = False
-        excel = win32.gencache.EnsureDispatch('Excel.Application')
-        excel.Visible = False
-        excel.DisplayAlerts = False
-        wb = excel.Workbooks.Open(path)
+        excel1 = win32.gencache.EnsureDispatch('Excel.Application')
+        excel1.Visible = False
+        excel1.DisplayAlerts = False
+        wb = excel1.Workbooks.Open(path)
         last_sheet_index = wb.Worksheets.Count
         ws = None
 
@@ -287,11 +287,11 @@ def write_branches_in_their_big_excels(end_date_):
                 at_least_one_found = True
                 count += 1
 
-                excel = win32.gencache.EnsureDispatch('Excel.Application')
-                excel.Visible = False
-                excel.DisplayAlerts = False
+                excel_ = win32.gencache.EnsureDispatch('Excel.Application')
+                excel_.Visible = False
+                excel_.DisplayAlerts = False
 
-                wb0 = excel.Workbooks.Open(os.path.join(saving_path, single_branch))
+                wb0 = excel_.Workbooks.Open(os.path.join(saving_path, single_branch))
                 ws0 = wb0.Worksheets(1)
 
                 empty_row = ws2.Cells.SpecialCells(win32.constants.xlCellTypeLastCell).Row + 1
@@ -868,10 +868,10 @@ if __name__ == '__main__':
     net_use(ardak_path, global_username, global_password)
     net_use(jadyra_path, global_username, global_password)
 
-    main_executor = '10.70.2.9'
+    main_executor = '10.70.2.9'  # 172.20.1.24
 
     logger.info(end_date)
-    logger.warning(f'Робот запустился на дату {end_date} на машине {ip_address}')
+    # logger.warning(f'Робот запустился на дату {end_date} на машине {ip_address}')
     for i in range(5):
         try:
             try:
@@ -936,6 +936,7 @@ if __name__ == '__main__':
                         write_branches_in_their_big_excels(end_date)
                         break
                     except Exception as error:
+
                         logger.info(f'ERROR OCCURED: {error}')
                         with suppress(Exception):
                             os.system('taskkill /im excel.exe')
@@ -950,7 +951,7 @@ if __name__ == '__main__':
                             Расхождения, выявленные в отчете 100912 отражены в сводной таблице. Готовые сводные таблицы размещены на сетевой папке M:\Stuff\_06_Бухгалтерия\1. ОК и ЗО\алмата\отчет по контролю касс 2022г\Жадыра Робот; M:\Stuff\_06_Бухгалтерия\1. ОК и ЗО\алмата\отчет по контролю касс 2022г\Ардак Робот""",
                           to=['Abdykarim.D@magnum.kz', 'Mukhtarova@magnum.kz', 'Sakpankulova@magnum.kz', 'KUSHKEYEVA@magnum.kz', 'Baishukova@magnum.kz'],
                           subject=f'Сбор расхождений по чекам за {end_date}', username=smtp_author, url=smtp_host)
-                # logger.info('Процесс закончился успешно')
+                logger.info('Процесс закончился успешно')
                 failed = False
 
                 logger.info(f'Закончили на дату {end_date}')
