@@ -237,13 +237,17 @@ def write_branches_in_their_big_excels(end_date_):
     year = str(end_date_.year)
     month = end_date_.month
 
+    print(year, month)
+
     def open_excel(path):
         found = False
+
         excel1 = win32.gencache.EnsureDispatch('Excel.Application')
         excel1.Visible = False
         excel1.DisplayAlerts = False
         wb = excel1.Workbooks.Open(path)
         last_sheet_index = wb.Worksheets.Count
+
         ws = None
 
         for sheet in wb.Worksheets:
@@ -251,8 +255,10 @@ def write_branches_in_their_big_excels(end_date_):
                 print('sheet name:', sheet.Name)
                 ws = wb.Worksheets(sheet.Name)
                 found = True
+                print('Нашёл:', sheet.Name)
 
         if not found:
+            print('Started creating new sheet')
             ws = wb.Worksheets.Add(Before=wb.Worksheets(last_sheet_index))
 
             ws.Name = months[month - 1] + ' ' + year
@@ -853,131 +859,103 @@ def wait_until_secondary_machine_finishes():
 
 if __name__ == '__main__':
 
-    failed = False
+    for day in ['02.10.2023']:
 
-    today = datetime.datetime.today()
+        failed = False
+        today = datetime.datetime.today()
 
-    start_date = (today - datetime.timedelta(days=1)).strftime('%d.%m.%Y')
-    end_date = (today - datetime.timedelta(days=1)).strftime('%d.%m.%Y')
-    today = today.strftime('%d.%m.%Y')
+        start_date = (today - datetime.timedelta(days=1)).strftime('%d.%m.%Y')
+        end_date = (today - datetime.timedelta(days=1)).strftime('%d.%m.%Y')
+        today = today.strftime('%d.%m.%Y')
 
-    # start_date = '26.08.2023'
-    # end_date = '26.08.2023'
-    print(start_date, end_date)
-    net_use(Path(ardak_path).parent.parent, global_username, global_password)
-    net_use(ardak_path, global_username, global_password)
-    net_use(jadyra_path, global_username, global_password)
+        start_date = day  # ? Comment in prod
+        end_date = day  # * Comment in prod
 
-    main_executor = '10.70.2.9'  # 172.20.1.24
+        # save_date = (datetime.date(int(end_date.split('.')[2]), int(end_date.split('.')[1]), int(end_date.split('.')[0])) - datetime.timedelta(days=1)).strftime('%d.%m.%Y')
+        save_date = end_date
 
-    logger.info(end_date)
-    # logger.warning(f'Робот запустился на дату {end_date} на машине {ip_address}')
-    for i in range(5):
-        try:
+        print(start_date, end_date, '|', save_date)
+        net_use(Path(ardak_path).parent.parent, global_username, global_password)
+        net_use(ardak_path, global_username, global_password)
+        net_use(jadyra_path, global_username, global_password)
+
+        main_executor = '10.70.2.9'  # 172.20.1.24
+
+        logger.info(end_date)
+        logger.warning(f'Робот запустился на дату {end_date} на машине {ip_address}, дата сохранения отчётов {save_date}')
+        for i in range(5):
             try:
-                sql_delete_table()
-            except:
-                pass
+                try:
+                    sql_delete_table()
+                except:
+                    pass
 
-            sql_create_table()
+                sql_create_table()
 
-            # try:
-            #     df2 = get_all_existing_branches_from_sprut(sprut)
-            #
-            #     df = get_data_to_execute()
-            #
-            #     branches_to_execute = get_branches_to_execute(df, df2)
-            #
-            # except Exception as e:
-            #     branches = ['Алматинский филиал №1 ТОО "Magnum Cash&Carry"', 'Товарищество с ограниченной ответственностью Magnum Cash&Carry(777)', 'Алматинский филиал №2 ТОО "Magnum Cash&Carry"', 'Алматинский филиал №3  ТОО "Magnum Cash&Carry"', 'Карагандинский Филиал №1 ТОО "Magnum Cash&Carry"', 'Филиал №1 ТОО "MAGNUM CASH&CARRY" в г.Астана', 'Филиал №4 ТОО "Magnum Cash&Carry" в г. Алматы', 'Филиал ТОО "Magnum Cash&Carry" №5 в г. Алматы', 'Алматинский филиал №6 ТОО "Magnum Cash&Carry"', 'Филиал Тест ТОО "Magnum cash&carry"', 'Алматинский филиал №7 ТОО "Magnum Cash&Carry"', 'Филиал ТОО "Magnum cash&carry" в г. Шымкент', 'Алматинский филиал №8 ТОО "Magnum Cash&Carry"', 'Алматинский филиал №10 ТОО "Magnum Cash&Carry"', 'Алматинский филиал №9 ТОО "Magnum Cash&Carry"', 'Алматинский филиал №11 ТОО "Magnum Cash&Carry"', 'Алматинский филиал №12 ТОО "Magnum Cash&Carry"', 'Филиал №2 ТОО "Magnum Cash&Carry" в г. Шымкент', 'Филиал ТОО "Magnum cash&carry" в г. Талдыкорган',
-            #                 'Алматинский филиал №14 ТОО "Magnum Cash&Carry"', 'Филиал №2 ТОО "MAGNUM CASH&CARRY" в г.Астана', 'Филиал №3 ТОО "MAGNUM CASH&CARRY" в г.Астана', 'Филиал №2 ТОО "Magnum Cash&Carry" в г.Талдыкорган', 'Алматинский филиал №16 ТОО "Magnum Cash&Carry"', 'Алматинский филиал №15 ТОО "Magnum Cash&Carry"', 'Алматинский филиал №17 ТОО "Magnum Cash&Carry"', 'Филиал №1 ТОО "Magnum Cash&Carry" в г.Каскелен', 'Алматинский филиал №20 ТОО "Magnum Cash&Carry"', 'Алматинский филиал №18 ТОО "Magnum Cash&Carry"', 'Алматинский филиал №19 ТОО "Magnum Cash&Carry"', 'Филиал №4 ТОО "Magnum Cash&Carry" в г.Шымкент', 'Карагандинский филиал №2 ТОО "Magnum Cash&Carry"', 'Алматинский филиал №21 ТОО "Magnum Cash&Carry"', 'Филиал №1 ТОО "Magnum Cash&Carry" в г. Петропавловск', 'Алматинский филиал №22 ТОО "Magnum Cash&Carry"', 'Алматинский филиал №23 ТОО "Magnum Cash&Carry"', 'Филиал №3 ТОО "Magnum Cash&Carry" в г. Шымкент', 'Алматинский филиал №24 ТОО "Magnum Cash&Carry"',
-            #                 'Филиал №4 ТОО "MAGNUM CASH&CARRY" в г.Астана', 'Филиал №5 ТОО "MAGNUM CASH&CARRY" в г.Астана', 'Алматинский филиал №25 ТОО "Magnum Cash&Carry"', 'Филиал №1 в г. Кызылорда ТОО "Magnum Cash&Carry"', 'Алматинский филиал №26 ТОО "Magnum Cash&Carry"', 'Филиал №6 ТОО "MAGNUM CASH&CARRY" в г.Астана', 'Филиал №7 ТОО "MAGNUM CASH&CARRY" в г.Астана', 'Филиал №8 ТОО "MAGNUM CASH&CARRY" в г.Астана', 'Филиал №9 ТОО "MAGNUM CASH&CARRY" в г.Астана', 'Филиал №10 ТОО "MAGNUM CASH&CARRY" в г.Астана', 'Филиал №1 ТОО "Magnum Cash&Carry" в г. Тараз', 'Алматинский филиал №32 ТОО "Magnum Cash&Carry"', 'Алматинский филиал №28 ТОО "Magnum Cash&Carry"', 'Алматинский филиал №29 ТОО "Magnum Cash&Carry"', 'Алматинский филиал №30 ТОО "Magnum Cash&Carry"', 'Алматинский филиал №31 ТОО "Magnum Cash&Carry"', 'Алматинский филиал №33 ТОО Magnum Cash&Carry', 'Алматинский филиал №34 ТОО Magnum Cash&Carry', 'Алматинский филиал №35 ТОО Magnum Cash&Carry',
-            #                 'Филиал №36 ТОО "Magnum Cash&Carry" в г Алматы',
-            #                 'Филиал №37 ТОО "Magnum Cash&Carry" в г. Алматы', 'Филиал №38 ТОО Magnum Cash&Carry в г. Алматы', 'Филиал №5 ТОО "Magnum Cash&Carry" в г. Шымкент', 'Филиал №11 ТОО "MAGNUM CASH&CARRY" в г.Астана', 'Филиал №12 ТОО "MAGNUM CASH&CARRY" в г.Астана', 'Филиал №13 ТОО "MAGNUM CASH&CARRY" в г.Астана', 'Филиал №13 ТОО "Magnum Cash&Carry" в г.Алматы', 'Филиал №39 ТОО "Magnum Cash&Carry" в г.Алматы', 'Филиал №15 ТОО "MAGNUM CASH&CARRY" в г.Астана', 'Филиал №40 ТОО "MAGNUM CASH&CARRY" в г.Алматы', 'Алматинский филиал №41 ТОО "Magnum Cash&Carry"', 'Филиал №42 ТОО "Magnum Cash&Carry" в г.Алматы', 'Алматинский филиал №43 ТОО "Magnum Cash&Carry"', 'Филиал №14 ТОО "MAGNUM CASH&CARRY" в г.Астана', 'Филиал №6 ТОО "Magnum Cash&Carry" в г. Шымкент', 'Филиал №7 ТОО "Magnum Cash&Carry" в г. Шымкент', 'Филиал РЦ №1 ТОО "Magnum Cash&Carry" в г.Астана', 'Филиал РЦ №2 ТОО "Magnum Cash&Carry" в г.Шымкент', 'Филиал №16 ТОО "MAGNUM CASH&CARRY" в г.Астана',
-            #                 'Филиал №17 ТОО "MAGNUM CASH&CARRY" в г.Астана', 'Карагандинский филиал №4 ТОО "Magnum Cash&Carry"', 'Карагандинский филиал №3 ТОО "Magnum Cash&Carry"', 'Алматинский филиал №44 ТОО "Magnum Cash&Carry"', 'Филиал №8 ТОО "Magnum Cash&Carry" в г. Шымкент', 'Филиал №2 ТОО "Magnum Cash&Carry" в г. Тараз', 'Карагандинский филиал №5 ТОО "Magnum Cash&Carry"', 'Филиал №45 ТОО «MAGNUM CASH&CARRY» в г. Алматы', 'Филиал №1 ТОО "Magnum Cash&Carry" в г.Есик', 'Филиал №19 ТОО "MAGNUM CASH&CARRY" в г.Астана', 'Филиал №46 ТОО «MAGNUM СASH&CARRY» в г. Алматы', 'Филиал №24 ТОО "MAGNUM CASH&CARRY" в г.Астана', 'Алматинский филиал №49 ТОО "Magnum Cash&Carry"', 'Филиал №21 ТОО "MAGNUM CASH&CARRY" в г.Астана', 'Филиал №9 ТОО «MAGNUM СASH&CARRY» в г. Шымкент', 'Филиал №48 ТОО «MAGNUM СASH&CARRY» в г.Алматы', 'Филиал №10 ТОО «MAGNUM СASH&CARRY» в г. Шымкент', 'Филиал №20 ТОО "MAGNUM CASH&CARRY" в г.Астана', 'Филиал №56 ТОО «MAGNUM CASH&CARRY» в г. Алматы',
-            #                 'Филиал №28 ТОО "MAGNUM CASH&CARRY" в г.Астана', 'Филиал №50 ТОО «MAGNUM CASH&CARRY» в г. Алматы', 'Филиал №53 ТОО «MAGNUM CASH&CARRY» в г. Алматы', 'Филиал №1 ТОО «МAGNUM СASH&CARRY» в г. Туркестан', 'Филиал №22 ТОО "MAGNUM CASH&CARRY" в г.Астана', 'Филиал №7 ТОО «МAGNUM СASH&CARRY» в г.Караганда', 'Филиал №51 ТОО «MAGNUM CASH&CARRY» в г. Алматы', 'Филиал №23 ТОО "MAGNUM CASH&CARRY" в г.Астана', 'Филиал №18 ТОО "MAGNUM CASH&CARRY" в г.Астана', 'Филиал №52 ТОО «MAGNUM СASH&CARRY» в г. Алматы', 'Филиал №25 ТОО "MAGNUM CASH&CARRY" в г.Астана', 'Филиал №54 ТОО «MAGNUM СASH&CARRY» в г. Алматы', 'Филиал №55 ТОО «MAGNUM СASH&CARRY» в г. Алматы', 'Филиал №26 ТОО "MAGNUM CASH&CARRY" в г.Астана', 'Филиал №27 ТОО "MAGNUM CASH&CARRY" в г.Астана', 'Филиал №29 ТОО "MAGNUM CASH&CARRY" в г.Астана', 'Филиал №30 ТОО "MAGNUM CASH&CARRY" в г.Астана', 'Филиал №60 ТОО «MAGNUM CASH&CARRY» в г. Алматы', 'Филиал №2 в г. Кызылорда ТОО "Magnum Cash&Carry"',
-            #                 'Карагандинский филиал №6 ТОО "Magnum Cash&Carry"', 'Дискаунтер Реалист №11', 'Филиал №59 ТОО «MAGNUM CASH&CARRY» в г. Алматы', 'Филиал №58 ТОО «MAGNUM CASH&CARRY» в г. Алматы', 'Филиал №1 ТОО "MAGNUM CASH&CARRY"  в г. Усть-Каменогорск', 'Филиал №2 ТОО "MAGNUM CASH&CARRY"  в г. Усть-Каменогорск', 'Филиал №31 ТОО "MAGNUM CASH&CARRY" в г.Астана', 'ДУЦП ТОО «Magnum Cash&Carry»', 'Филиал №33 ТОО «MAGNUM CASH&CARRY» в г.Астана', 'Филиал №35 ТОО «MAGNUM CASH&CARRY» в г.Астана', 'Филиал №32 ТОО «MAGNUM CASH&CARRY» в г.Астана', 'Филиал №41 ТОО "MAGNUM CASH&CARRY" в г.Астана', 'Филиал №34 ТОО «MAGNUM CASH&CARRY» в г.Астана', 'Филиал №36 ТОО «MAGNUM CASH&CARRY» в г.Астана', 'Филиал №37 ТОО «MAGNUM CASH&CARRY» в г.Астана', 'Филиал №2 ТОО "Magnum Cash&Carry" в г.Каскелен', 'Филиал №47 ТОО «MAGNUM СASH&CARRY» в г. Алматы', 'Филиал №2 ТОО «МAGNUM СASH&CARRY» в г. Туркестан', 'Филиал №61 ТОО «MAGNUM CASH&CARRY» в г. Алматы',
-            #                 'Филиал №38 ТОО "MAGNUM CASH&CARRY" в г.Астана',
-            #                 'Филиал №39 ТОО "MAGNUM CASH&CARRY" в г.Астана', 'Филиал №40 ТОО "MAGNUM CASH&CARRY" в г.Астана', 'Филиал №42 ТОО «MAGNUM CASH&CARRY» в г.Астана', 'Филиал №51 ТОО "MAGNUM CASH&CARRY" в г.Астана', 'Филиал №48 ТОО «MAGNUM CASH&CARRY» в г.Астана', 'Филиал №49 ТОО «MAGNUM CASH&CARRY» в г.Астана', 'Филиал №43 ТОО "MAGNUM CASH&CARRY" в г.Астана', 'Филиал №44 ТОО "MAGNUM CASH&CARRY" г.Астана', 'Филиал №53 ТОО "MAGNUM CASH&CARRY" в г.Астана', 'Филиал №45 ТОО "MAGNUM CASH&CARRY" в г.Астана', 'Филиал №57 ТОО «MAGNUM CASH&CARRY» в г. Алматы', 'Филиал №46 ТОО «MAGNUM CASH&CARRY» в г.Астана', 'Филиал №47 ТОО «MAGNUM CASH&CARRY» в г.Астана', 'Филиал №50 ТОО «MAGNUM CASH&CARRY» в г.Астана', 'Филиал №52 ТОО «MAGNUM CASH&CARRY» в г.Астана', 'Филиал №11 ТОО "Magnum Cash&Carry" в г. Шымкент', 'Филиал №56 ТОО «MAGNUM CASH&CARRY» в г.Астана', 'Филиал №54 ТОО "MAGNUM CASH&CARRY" в г.Астана', 'Филиал №55 ТОО "MAGNUM CASH&CARRY" в г.Астана',
-            #                 'Филиал №62 ТОО «MAGNUM CASH&CARRY» в г. Алматы',
-            #                 'Филиал №63 ТОО «MAGNUM CASH&CARRY» в г. Алматы', 'Филиал №12 ТОО "Magnum Cash&Carry" в г. Шымкент', 'Филиал №68 ТОО «MAGNUM CASH&CARRY» в г. Алматы', 'Филиал №3 ТОО "Magnum Cash&Carry" в г. Тараз', 'Филиал №14 ТОО "Magnum Cash&Carry" в г. Шымкент', 'Филиал №67 ТОО «MAGNUM CASH&CARRY» в г. Алматы', 'Распределительный центр №3 в Алматинской области', 'Филиал №66 ТОО «MAGNUM CASH&CARRY» в г. Алматы', 'Филиал №69 ТОО «MAGNUM CASH&CARRY» в г. Алматы', 'Филиал №63 ТОО "MAGNUM CASH&CARRY" в г.Астана', 'Филиал №64 ТОО «MAGNUM CASH&CARRY» в г. Алматы', 'Филиал №57 ТОО "MAGNUM CASH&CARRY" в г.Астана', 'Филиал №62 ТОО "MAGNUM CASH&CARRY" в г.Астана', 'Филиал №15 ТОО "Magnum Cash&Carry" в г. Шымкент', 'Алматинский филиал №71 ТОО "Magnum Cash&Carry"', 'Филиал №20 ТОО "Magnum Cash&Carry" в г. Шымкент', 'Филиал №17 ТОО «MAGNUM СASH&CARRY» в г. Шымкент', 'Филиал №73 ТОО «MAGNUM СASH&CARRY» в г. Алматы', 'Филиал №72 ТОО «MAGNUM СASH&CARRY» в г. Алматы',
-            #                 'Филиал №18 ТОО «MAGNUM СASH&CARRY» в г. Шымкент', 'Филиал №19 ТОО «MAGNUM СASH&CARRY» в г. Шымкент', 'Филиал №65 ТОО «MAGNUM CASH&CARRY» в г. Алматы', 'Филиал №3 ТОО «МAGNUM СASH&CARRY» по Туркестанской области', 'Филиал №61 ТОО "MAGNUM CASH&CARRY" в г.Астана', 'Филиал №20 ТОО "Magnum Cash&Carry" в г. Петропавловск', 'Филиал №21 ТОО "Magnum Cash&Carry" в г. Петропавловск', 'Филиал №58 ТОО "MAGNUM CASH&CARRY" в г.Астана', 'Филиал №1 ТОО "Magnum Cash&Carry" в г.Конаев', 'Филиал №3 ТОО "MAGNUM CASH&CARRY"  в г. Усть-Каменогорск', 'Филиал №19 ТОО "Magnum Cash&Carry" в г. Петропавловск', 'Филиал №22 ТОО "Magnum Cash&Carry" в г. Петропавловск', 'Филиал №64 ТОО "MAGNUM CASH&CARRY" в г.Астана', 'Филиал №65 ТОО "MAGNUM CASH&CARRY" в г.Астана', 'Филиал №17 ТОО "Magnum Cash&Carry" в г. Петропавловск', 'Филиал РЦ №4 ТОО "Magnum Cash&Carry" в г.Петропавловск', 'Филиал №2 ТОО "Magnum Cash&Carry" в г. Петропавловск',
-            #                 'Филиал №11 ТОО "Magnum Cash&Carry" в г. Петропавловск',
-            #                 'Филиал №4 ТОО "Magnum Cash&Carry" в г. Петропавловск', 'Филиал №5 ТОО "Magnum Cash&Carry" в г. Петропавловск', 'Филиал №15 ТОО "Magnum Cash&Carry" в г. Петропавловск', 'Филиал №7 ТОО "Magnum Cash&Carry" в г. Петропавловск', 'Филиал №8 ТОО "Magnum Cash&Carry" в г. Петропавловск', 'Филиал №6 ТОО "Magnum Cash&Carry" в г. Петропавловск', 'Филиал №13 ТОО "Magnum Cash&Carry" в г. Петропавловск', 'Филиал №18 ТОО "Magnum Cash&Carry" в г. Петропавловск', 'Филиал №10 ТОО "Magnum Cash&Carry" в г. Петропавловск', 'Филиал №12 ТОО "Magnum Cash&Carry" в г. Петропавловск', 'Филиал №9 ТОО "Magnum Cash&Carry" в г. Петропавловск', 'Филиал №16 ТОО "Magnum Cash&Carry" в г. Петропавловск', 'Филиал №14 ТОО "Magnum Cash&Carry" в г. Петропавловск', 'Филиал №3 ТОО "Magnum Cash&Carry" в г. Петропавловск', 'Филиал №59 ТОО «MAGNUM CASH&CARRY» в г.Астана', 'Филиал №13 ТОО "Magnum Cash&Carry" в г. Шымкент', 'Филиал №75 ТОО "Magnum Сash&Сarry" в г. Алматы',
-            #                 'Филиал №60 ТОО "MAGNUM CASH&CARRY" в г.Астана', 'Филиал №21 ТОО "Magnum Cash&Carry" в г. Шымкент', 'Филиал №22 ТОО "Magnum Cash&Carry" в г. Шымкент', 'Филиал №23 ТОО "Magnum Cash&Carry" в г. Шымкент', 'Филиал №70 ТОО "Magnum Сash&Сarry" в г. Алматы', 'Филиал №24 ТОО "Magnum Cash&Carry" в г. Шымкент', 'Филиал №25 ТОО "Magnum Cash&Carry" в г. Шымкент', 'Филиал №26 ТОО "Magnum Cash&Carry" в г. Шымкент', 'Филиал №27 ТОО "Magnum Cash&Carry" в г. Шымкент', 'Филиал №28 ТОО "Magnum Cash&Carry" в г. Шымкент', 'Филиал №29 ТОО "Magnum Cash&Carry" в г. Шымкент', 'Филиал №30 ТОО "Magnum Cash&Carry" в г. Шымкент', 'Филиал №31 ТОО "Magnum Cash&Carry" в г. Шымкент', 'Филиал №32 ТОО "Magnum Cash&Carry" в г. Шымкент', 'Филиал №33 ТОО "Magnum Cash&Carry" в г. Шымкент', 'Филиал №34 ТОО "Magnum Cash&Carry" в г. Шымкент', 'Филиал №4 ТОО "Magnum Cash&Carry" в г. Тараз', 'Филиал №5 ТОО "Magnum Cash&Carry" в г. Тараз', 'Филиал №6 ТОО "Magnum Cash&Carry" в г. Тараз',
-            #                 'Филиал №7 ТОО "Magnum Cash&Carry" в г. Тараз', 'Филиал №8 ТОО "Magnum Cash&Carry" в г. Тараз', 'Филиал №9 ТОО "Magnum Cash&Carry" в г. Тараз', 'Филиал №10 ТОО "Magnum Cash&Carry" в г. Тараз', 'Филиал №66 ТОО "MAGNUM CASH&CARRY" в г.Астана', 'Филиал №67 ТОО "MAGNUM CASH&CARRY" в г.Астана', 'Филиал №35 ТОО «MAGNUM СASH&CARRY» в г. Шымкент', 'Филиал №23 ТОО "Magnum Cash&Carry" в г. Петропавловск', 'Филиал №76 ТОО «MAGNUM CASH&CARRY» в г. Алматы', 'Филиал №1 Маркет холл ТОО "Magnum Cash&Carry" в г. Алматы', 'Филиал №68 ТОО "MAGNUM CASH&CARRY" в г.Астана', 'Филиал №69 ТОО "MAGNUM CASH&CARRY" в г.Астана', 'Филиал №71 ТОО "MAGNUM CASH&CARRY" в г.Астана', 'Филиал №73 ТОО "MAGNUM CASH&CARRY" в г.Астана', 'Филиал №70 ТОО "MAGNUM CASH&CARRY" в г.Астана', 'Филиал №74 ТОО "MAGNUM CASH&CARRY" в г.Астана', 'Филиал №72 ТОО "MAGNUM CASH&CARRY" в г.Астана', 'Филиал №75 ТОО "MAGNUM CASH&CARRY" в г.Астана', 'Филиал №77 ТОО "Magnum Сash&Сarry" в г. Алматы',
-            #                 'Филиал №78 ТОО "Magnum Сash&Сarry" в г. Алматы', 'Филиал №76 ТОО "MAGNUM CASH&CARRY" в г.Астана', 'Филиал №77 ТОО "MAGNUM CASH&CARRY" в г.Астана', 'Филиал №79 ТОО "Magnum Сash&Сarry" в г. Алматы', 'Алматинский филиал №80 ТОО "Magnum Cash&Carry"', 'Алматинский филиал №81 ТОО "Magnum Cash&Carry"', 'Филиал №82 ТОО "Magnum Сash&Сarry" в г. Алматы', 'Филиал №83 ТОО "Magnum Сash&Сarry" в г. Алматы', 'Филиал №4 ТОО «МAGNUM СASH&CARRY» в г. Туркестан', 'Филиал №79 ТОО "MAGNUM CASH&CARRY" в г.Астана', 'Филиал №84 ТОО "Magnum Сash&Сarry" в г. Алматы', 'Филиал №85 ТОО "Magnum Сash&Сarry" в г. Алматы', 'Филиал №80 ТОО "MAGNUM CASH&CARRY" в г.Астана', 'Филиал №81 ТОО "MAGNUM CASH&CARRY" в г.Астана', 'Филиал №86 ТОО "Magnum Сash&Сarry" в г. Алматы', 'Филиал №82 ТОО "MAGNUM CASH&CARRY" в г.Астана', 'Филиал №83 ТОО "MAGNUM CASH&CARRY" в г.Астана', 'Филиал №74 ТОО "Magnum Сash&Сarry" в г. Алматы'
-            #                 ]
-            #     df = get_data_to_execute()
-            #
-            #     branches_to_execute = get_branches_to_execute(df, branches)
-            #
-            # print(len(branches_to_execute), branches_to_execute)
+                df = pd.read_excel(mapping_path)
 
-            df = pd.read_excel(mapping_path)
+                branches_to_execute = list(df[df['Сотрудник'] == 'Baishukova@magnum.kz']['Название филиала в Спруте'])
 
-            branches_to_execute = list(df[df['Сотрудник'] == 'Baishukova@magnum.kz']['Название филиала в Спруте'])
+                if ip_address == main_executor:
+                    branches_to_execute = list(df[df['Сотрудник'] == 'Nusipova@magnum.kz']['Название филиала в Спруте'])
 
-            if ip_address == main_executor:
-                branches_to_execute = list(df[df['Сотрудник'] == 'Nusipova@magnum.kz']['Название филиала в Спруте'])
+                send_in_cache(end_date)
 
-            send_in_cache(end_date)
+                create_z_reports(branches_to_execute, end_date, end_date)
 
-            create_z_reports(branches_to_execute, end_date, end_date)
+                print('Finishing0')
+                if ip_address == main_executor:
 
-            # print('Заканчиваем')
-            if ip_address == main_executor:
+                    wait_until_secondary_machine_finishes()
 
-                wait_until_secondary_machine_finishes()
+                    print('Finishing')
+                    for tries in range(5):
+                        try:
+                            write_branches_in_their_big_excels(save_date)
+                            break
+                        except Exception as error:
 
-                print('Finishing')
-                for tries in range(5):
-                    try:
-                        write_branches_in_their_big_excels(end_date)
-                        break
-                    except Exception as error:
+                            logger.info(f'ERROR OCCURED: {error}')
+                            with suppress(Exception):
+                                os.system('taskkill /im excel.exe')
+                            sleep(10)
+                            pass
 
-                        logger.info(f'ERROR OCCURED: {error}')
-                        with suppress(Exception):
-                            os.system('taskkill /im excel.exe')
-                        sleep(10)
-                        pass
+                    Path.unlink(Path(os.path.join(saving_path, 'Secondary machine finished.txt')))
 
-                Path.unlink(Path(os.path.join(saving_path, 'Secondary machine finished.txt')))
+                    archive_files(end_date)
 
-                archive_files(end_date)
+                    smtp_send(r"""Добрый день!
+                                Расхождения, выявленные в отчете 100912 отражены в сводной таблице. Готовые сводные таблицы размещены на сетевой папке M:\Stuff\_06_Бухгалтерия\1. ОК и ЗО\алмата\отчет по контролю касс 2022г\Жадыра Робот; M:\Stuff\_06_Бухгалтерия\1. ОК и ЗО\алмата\отчет по контролю касс 2022г\Ардак Робот""",
+                              to=['Abdykarim.D@magnum.kz', 'Mukhtarova@magnum.kz', 'Sakpankulova@magnum.kz', 'KUSHKEYEVA@magnum.kz', 'Baishukova@magnum.kz'],
+                              subject=f'Сбор расхождений по чекам за {today}', username=smtp_author, url=smtp_host)
+                    logger.info('Процесс закончился успешно')
+                    failed = False
 
-                smtp_send(r"""Добрый день!
-                            Расхождения, выявленные в отчете 100912 отражены в сводной таблице. Готовые сводные таблицы размещены на сетевой папке M:\Stuff\_06_Бухгалтерия\1. ОК и ЗО\алмата\отчет по контролю касс 2022г\Жадыра Робот; M:\Stuff\_06_Бухгалтерия\1. ОК и ЗО\алмата\отчет по контролю касс 2022г\Ардак Робот""",
-                          to=['Abdykarim.D@magnum.kz', 'Mukhtarova@magnum.kz', 'Sakpankulova@magnum.kz', 'KUSHKEYEVA@magnum.kz', 'Baishukova@magnum.kz'],
-                          subject=f'Сбор расхождений по чекам за {end_date}', username=smtp_author, url=smtp_host)
-                logger.info('Процесс закончился успешно')
-                failed = False
+                    logger.info(f'Закончили на дату {end_date}')
+                    logger.warning(f'Робот успешно завершился на дату {end_date}')
 
-                logger.info(f'Закончили на дату {end_date}')
-                logger.warning(f'Робот успешно завершился на дату {end_date}')
+                else:
 
-            else:
+                    with open(os.path.join(saving_path, 'Secondary machine finished.txt'), 'w') as file:
+                        file.write('kek')
 
-                with open(os.path.join(saving_path, 'Secondary machine finished.txt'), 'w') as file:
-                    file.write('kek')
+                break
 
-            break
+            except Exception as error:
+                if i == 4:
+                    failed = True
+                print(f'Error occured: {error}\nRetried times: {i + 1}')
+                logger.info(f'Error occured: {error}\nRetried times: {i + 1}')
+                # sleep(2000)
+        if failed and ip_address == main_executor:
+            # logger.info(f'Робот сломался')
+            smtp_send(r"""Добрый день!
+            Робот не отработал ни одну из 5 попыток""",
+                      to=['Abdykarim.D@magnum.kz', 'Mukhtarova@magnum.kz', 'Sakpankulova@magnum.kz', 'KUSHKEYEVA@magnum.kz', 'Baishukova@magnum.kz'],
+                      subject=f'Сбор расхождений по чекам за {end_date}', username=smtp_author, url=smtp_host)
 
-        except Exception as error:
-            if i == 4:
-                failed = True
-            print(f'Error occured: {error}\nRetried times: {i + 1}')
-            logger.info(f'Error occured: {error}\nRetried times: {i + 1}')
-            # sleep(2000)
-    if failed and ip_address == main_executor:
-        # logger.info(f'Робот сломался')
-        smtp_send(r"""Добрый день!
-        Робот не отработал ни одну из 5 попыток""",
-                  to=['Abdykarim.D@magnum.kz', 'Mukhtarova@magnum.kz', 'Sakpankulova@magnum.kz', 'KUSHKEYEVA@magnum.kz', 'Baishukova@magnum.kz'],
-                  subject=f'Сбор расхождений по чекам за {end_date}', username=smtp_author, url=smtp_host)
+            logger.warning(f'Робот сломался на дату {end_date} на машине {ip_address}')
 
-        logger.warning(f'Робот сломался на дату {end_date} на машине {ip_address}')
-
-    elif failed and ip_address != main_executor:
-        logger.warning(f'Робот сломался на дату {end_date} на машине {ip_address}')
+        elif failed and ip_address != main_executor:
+            logger.warning(f'Робот сломался на дату {end_date} на машине {ip_address}')
