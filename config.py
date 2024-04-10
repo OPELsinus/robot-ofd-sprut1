@@ -89,6 +89,11 @@ chat_id = config_data['chat_id']
 ardak_path = config_data['ardak_path']
 jadyra_path = config_data['jadyra_path']
 mapping_path = config_data['mapping_path']
+main_executor = config_data['main_executor']
+end_date_ = config_data['end_date']
+today_ = config_data['today']
+
+
 saving_path = global_path.joinpath(f".agent\\{robot_name}\\Output\\reports_ofd")
 saving_path.mkdir(exist_ok=True, parents=True)
 

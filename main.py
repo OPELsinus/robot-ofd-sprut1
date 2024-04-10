@@ -2,6 +2,7 @@ import datetime
 import os
 import shutil
 import time
+import traceback
 from contextlib import suppress
 from pathlib import Path
 
@@ -9,11 +10,12 @@ import Levenshtein
 import pandas as pd
 from time import sleep
 
+import win32com
 import win32com.client as win32
 import psycopg2 as psycopg2
 from pywinauto import keyboard
 
-from config import logger, download_path, robot_name, db_host, db_port, db_name, db_user, db_pass, tg_token, chat_id, smtp_host, smtp_author, jadyra_path, ardak_path, mapping_path, global_password, global_username, saving_path, ip_address
+from config import logger, download_path, robot_name, db_host, db_port, db_name, db_user, db_pass, tg_token, chat_id, smtp_host, smtp_author, jadyra_path, ardak_path, mapping_path, global_password, global_username, saving_path, ip_address, main_executor, today_, end_date_
 from core import Sprut
 from tools.clipboard import clipboard_get
 from tools.net_use import net_use
@@ -86,7 +88,7 @@ def insert_data_in_db(started_time, store_name, short_name, status, responsible,
         VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
     """
 
-    ended_time = datetime.datetime.now().strftime("%d.%m.%Y %H:%M:%S.%f") if status != 'processing' else ''
+    ended_time = datetime.datetime.now().strftime("%d.%m.%Y %H:%M:%S.%f") if status != 'processing' else datetime.datetime.now()
 
     values = (
         started_time.strftime("%d.%m.%Y %H:%M:%S.%f"),
@@ -184,22 +186,20 @@ def update_data_in_db(started_time, store_name, short_name, status, responsible,
     conn.close()
 
 
-def get_all_data():
+def check_if_store_in_db(store_name):
     conn = psycopg2.connect(host=db_host, port=db_port, database=db_name, user=db_user, password=db_pass)
     table_create_query = f'''
             SELECT * FROM ROBOT.{robot_name.replace("-", "_")}
-            order by started_time desc
+            where store_name = '{store_name} and status = 'success'
             '''
     cur = conn.cursor()
     cur.execute(table_create_query)
 
     df1 = pd.DataFrame(cur.fetchall())
-    df1.columns = ['started_time', 'ended_time', 'store_name', 'short_name', 'status', 'responsible', 'found_difference', 'count', 'error_reason', 'error_saved_path', 'execution_time']
 
     cur.close()
     conn.close()
-
-    return df1
+    return True if len(df1) >= 1 else False
 
 
 def get_data_to_execute():
@@ -230,6 +230,7 @@ def write_branches_in_their_big_excels(end_date_):
 
     # ? Create new page
     excel = win32.gencache.EnsureDispatch('Excel.Application')
+    # excel = win32com.client.Dispatch("Excel.Application")
     excel.Visible = False
     excel.DisplayAlerts = False
 
@@ -240,6 +241,7 @@ def write_branches_in_their_big_excels(end_date_):
     print(year, month)
 
     def open_excel(path):
+
         found = False
 
         excel1 = win32.gencache.EnsureDispatch('Excel.Application')
@@ -327,11 +329,16 @@ def write_branches_in_their_big_excels(end_date_):
 
     # ? Проверка каждого экселя на наличие расхождений
     for branch in os.listdir(saving_path):
+
         if branch == 'Secondary machine finished.txt':
             continue
+
         df = pd.read_excel(os.path.join(saving_path, branch))
 
-        df.columns = ['№ Кассы', 'Регистр. № кассы', '№', 'Итог продаж', 'Возвраты: (нал,безнал, бонус)', 'Возвраты Бонусы', 'Итого за минусом возвратов:', 'безнал', 'Итого наличных', 'итого наличных', 'Сертификаты подаренные', 'Сертификаты, реализованные частным лицам', 'Сертификаты, реализованные юр/ лицам', 'Сертификаты, созданные при возврате товара', 'Чеки по акции "Счастливый чек" (Бесплатные чеки)', 'Нехватка разменных монет', 'Оплата Бонусами', 'безнал', 'Итого продаж', 'Нал Разница', 'Безнал Разница', 'Разница', 'ООФД - Z - отчет - СПРУТ']
+        try:
+            df.columns = ['№ Кассы', 'Регистр. № кассы', '№', 'Итог продаж', 'Возвраты: (нал,безнал, бонус)', 'Возвраты Бонусы', 'Итого за минусом возвратов:', 'безнал', 'Итого наличных', 'итого наличных', 'Сертификаты подаренные', 'Сертификаты, реализованные частным лицам', 'Сертификаты, реализованные юр/ лицам', 'Сертификаты, созданные при возврате товара', 'Чеки по акции "Счастливый чек" (Бесплатные чеки)', 'Нехватка разменных монет', 'Оплата Бонусами', 'безнал', 'Итого продаж', 'Нал Разница', 'Безнал Разница', 'Разница', 'ООФД - Z - отчет - СПРУТ']
+        except:
+            df.columns = ['№ Кассы', 'Регистр. № кассы', '№', 'Итог продаж', 'Возвраты: (нал,безнал, бонус)', 'Возвраты Бонусы', 'Итого за минусом возвратов:', 'безнал', 'Итого наличных', 'итого наличных', 'Сертификаты подаренные', 'Сертификаты, реализованные частным лицам', 'Сертификаты, реализованные юр/ лицам', 'Сертификаты, созданные при возврате товара', 'Чеки по акции "Счастливый чек" (Бесплатные чеки)', 'Нехватка разменных монет', 'Оплата Бонусами', 'безнал', 'Итого продаж', 'Нал Разница', 'Безнал Разница', 'Разница', 'ООФД - Z - отчет - СПРУТ', 'Сумма скидки итого', 'Итого продаж за минусом скидки и возвратов, предоставлены в ОФД']
 
         title = df['Регистр. № кассы'].iloc[5]
         try:
@@ -342,11 +349,11 @@ def write_branches_in_their_big_excels(end_date_):
                 try:
                     nusipova_ws, found, count = check_one_branch(nusipova_ws, short_name, branch)
                     end_time = time.time()
-                    insert_data_in_db(started_time, branch, short_name, 'success', 'Nusipova', found, count, '', '', str(end_time - start_time))
+                    # insert_data_in_db(started_time, branch, short_name, 'success', 'Nusipova', found, count, '', '', str(end_time - start_time))
                 except Exception as ex:
                     end_time = time.time()
                     tg_send(f'FAILED: {short_name} | ({branch})', bot_token=tg_token, chat_id=chat_id)
-                    insert_data_in_db(started_time, branch, short_name, 'failed', 'Nusipova', '', 0, str(ex), '', str(end_time - start_time))
+                    # insert_data_in_db(started_time, branch, short_name, 'failed', 'Nusipova', '', 0, str(ex), '', str(end_time - start_time))
 
             else:
                 short_name = df1[df1['Название филиала в Спруте'] == title]['Короткое название филиала'].iloc[0]
@@ -354,11 +361,11 @@ def write_branches_in_their_big_excels(end_date_):
                 try:
                     baishukova_ws, found, count = check_one_branch(baishukova_ws, title, branch)
                     end_time = time.time()
-                    insert_data_in_db(started_time, branch, short_name, 'success', 'Baishukova', found, count, '', '', str(end_time - start_time))
+                    # insert_data_in_db(started_time, branch, short_name, 'success', 'Baishukova', found, count, '', '', str(end_time - start_time))
                 except Exception as ex:
                     end_time = time.time()
                     tg_send(f'FAILED: {short_name} | ({branch})', bot_token=tg_token, chat_id=chat_id)
-                    insert_data_in_db(started_time, branch, short_name, 'failed', 'Baishukova', '', 0, str(ex), '', str(end_time - start_time))
+                    # insert_data_in_db(started_time, branch, short_name, 'failed', 'Baishukova', '', 0, str(ex), '', str(end_time - start_time))
 
         except Exception as error:
             print('error:', error)
@@ -468,6 +475,7 @@ def send_in_cache(today):
             break
         except:
             pass
+
     print('clicked')
     while True:
         try:
@@ -476,6 +484,7 @@ def send_in_cache(today):
             break
         except:
             pass
+
     print('clicked1')
 
     sprut.parent_back(1)
@@ -502,11 +511,28 @@ def send_in_cache(today):
 
 def create_z_reports(branches, start_date, end_date):
 
-    for ind_, branch in enumerate(branches[::]):
+    for ind_, branch in enumerate(branches):
+
+        if str(branch) == 'nan':
+            continue
+
+        if check_if_store_in_db(branch):
+            continue
+
+        # found = False
+        # branch_ = branch.replace('.', '').replace('"', '').replace('«', '').replace('»', '')
+        # for file_ in os.listdir(saving_path):
+        #     if branch_ in file_:
+        #         found = True
+        #         break
+        # if found:
+        #     continue
+
         insert_data_in_db(datetime.datetime.now(), branch, '', 'processing', '', '', 0, '', '', '')
-        for i in range(5):
+
+        for _ in range(5):
             try:
-                print(f'Начали: {ind_}, {branch}')
+                print(f'Started branch: {ind_}, {branch}')
 
                 sprut = Sprut("MAGNUM")
                 sprut.run()
@@ -599,14 +625,21 @@ def create_z_reports(branches, start_date, end_date):
                 sprut.parent_back(1)
 
                 sprut.find_element({"title": "Ввод", "class_name": "TvmsFooterButton", "control_type": "Button",
-                                    "visible_only": True, "enabled_only": True, "found_index": 0}).click(double=True)
+                                    "visible_only": True, "enabled_only": True, "found_index": 0}).click(double=True, set_focus=True)
 
                 sleep(1)
 
-                if sprut.wait_element({"title": "Ввод", "class_name": "TvmsFooterButton", "control_type": "Button",
-                                       "visible_only": True, "enabled_only": True, "found_index": 0}, timeout=3):
-                    sprut.find_element({"title": "Ввод", "class_name": "TvmsFooterButton", "control_type": "Button",
-                                        "visible_only": True, "enabled_only": True, "found_index": 0}).click()
+                while True:
+                    try:
+                        sprut.find_element({"title": "Ввод", "class_name": "TvmsFooterButton", "control_type": "Button",
+                                            "visible_only": True, "enabled_only": True, "found_index": 0}, timeout=0.5).click()
+                    except:
+                        break
+                # sleep(0.1)
+                #
+                # with suppress(Exception):
+                #     sprut.find_element({"title": "Ввод", "class_name": "TvmsFooterButton", "control_type": "Button",
+                #                         "visible_only": True, "enabled_only": True, "found_index": 0}, timeout=0.1).click(set_focus=True)
 
                 wait_loading(branch)
 
@@ -615,25 +648,29 @@ def create_z_reports(branches, start_date, end_date):
                 sprut.quit()
 
                 print('Finished branch')
-                print('Finished branch')
+
+                insert_data_in_db(datetime.datetime.now(), branch, '', 'success', '', '', 0, '', '', '')
 
                 break
 
             except Exception as exc:
-                print(f'Error occured at {branch}: {exc}')
-                sleep(10)
-
-    print('-----------------------------------------------------------------------')
+                print(f'Error occured at {branch}: {traceback.print_exc()}')
+                sleep(1)
+        print('-----------------------------------------------------------------------')
     print('Finished CREATING Z REPORTS')
     print('-----------------------------------------------------------------------')
 
 
 def wait_loading(branch):
-    print('Started loading')
+
     print('Started loading')
     branch = branch.replace('.', '').replace('"', '').replace('«', '').replace('»', '')
     found = False
+
+    count = 0
+
     while True:
+
         for file in os.listdir(download_path):
             sleep(.1)
             creation_time = os.path.getctime(os.path.join(download_path, file))
@@ -649,11 +686,24 @@ def wait_loading(branch):
                 break
         if found:
             break
+
+        sleep(5)
+        count += 1
+
+        if count >= 120:  # 10 minutes (600 seconds)
+            print('----------------------------------- Ne dozhdalsya govna -----------------------------------')
+            print('----------------------------------- Ne dozhdalsya govna -----------------------------------')
+            print('----------------------------------- Ne dozhdalsya govna -----------------------------------')
+            break
+
+    if not found:
+        raise Exception("Error: Could not find excel")
     print('Finished loading')
     print('Finished loading')
 
 
 def get_all_existing_branches_from_sprut(sprut):
+
     # ? Collecting all existing branches from the sprut
 
     sprut.open("Отчеты")
@@ -820,7 +870,7 @@ def archive_files(prev_date):
     return zip_file_path
 
 
-def wait_until_main_machine_finishes():
+def wait_until_main_machine_finished():
 
     found = False
 
@@ -838,7 +888,7 @@ def wait_until_main_machine_finishes():
         sleep(10)
 
 
-def wait_until_secondary_machine_finishes():
+def wait_until_secondary_machine_finished():
 
     # found = False
 
@@ -859,36 +909,49 @@ def wait_until_secondary_machine_finishes():
 
 if __name__ == '__main__':
 
-    for day in ['02.10.2023']:
+    for day in range(1):
 
         failed = False
         today = datetime.datetime.today()
 
-        start_date = (today - datetime.timedelta(days=1)).strftime('%d.%m.%Y')
-        end_date = (today - datetime.timedelta(days=1)).strftime('%d.%m.%Y')
-        today = today.strftime('%d.%m.%Y')
+        if end_date_ == '':
+            start_date = (today - datetime.timedelta(days=1)).strftime('%d.%m.%Y')
+            end_date = (today - datetime.timedelta(days=1)).strftime('%d.%m.%Y')
+            today = today.strftime('%d.%m.%Y')
 
-        start_date = day  # ? Comment in prod
-        end_date = day  # * Comment in prod
+        else:
+            start_date = end_date_
+            end_date = end_date_
+            today = today_
+
+        # Пример
+        # start_date = '24.03.2024'  # ? Comment in prod
+        # end_date = '24.03.2024'  # * Comment in prod
+        # today = '25.03.2024'  # * Comment in prod
 
         # save_date = (datetime.date(int(end_date.split('.')[2]), int(end_date.split('.')[1]), int(end_date.split('.')[0])) - datetime.timedelta(days=1)).strftime('%d.%m.%Y')
         save_date = end_date
-
+   
         print(start_date, end_date, '|', save_date)
+
         net_use(Path(ardak_path).parent.parent, global_username, global_password)
         net_use(ardak_path, global_username, global_password)
         net_use(jadyra_path, global_username, global_password)
 
-        main_executor = '10.70.2.9'  # 172.20.1.24
+        # main_executor = '192.168.0.110'
+        # * -----
+        # main_executor = '10.70.2.9'  # '172.20.1.24'
 
         logger.info(end_date)
-        logger.warning(f'Робот запустился на дату {end_date} на машине {ip_address}, дата сохранения отчётов {save_date}')
+        logger.warning(f'Робот запустился за дату {today} на машине {ip_address}, дата сохранения отчётов {save_date}')
+
+        with suppress(Exception):
+            if ip_address == main_executor:
+                sql_delete_table()
+
         for i in range(5):
+
             try:
-                try:
-                    sql_delete_table()
-                except:
-                    pass
 
                 sql_create_table()
 
@@ -899,35 +962,43 @@ if __name__ == '__main__':
                 if ip_address == main_executor:
                     branches_to_execute = list(df[df['Сотрудник'] == 'Nusipova@magnum.kz']['Название филиала в Спруте'])
 
+                print(len(branches_to_execute), branches_to_execute)
+
                 send_in_cache(end_date)
 
                 create_z_reports(branches_to_execute, end_date, end_date)
 
                 print('Finishing0')
+
                 if ip_address == main_executor:
 
-                    wait_until_secondary_machine_finishes()
+                    wait_until_secondary_machine_finished()
 
                     print('Finishing')
                     for tries in range(5):
+                        logger.warning(f'Запись в файлы сбора. Попытка {tries + 1} / 5')
                         try:
                             write_branches_in_their_big_excels(save_date)
                             break
                         except Exception as error:
-
-                            logger.info(f'ERROR OCCURED: {error}')
+                            traceback.print_exc()
+                            smtp_send(r"""Робот сломался при записи в главные эксели""",
+                                      to=['Abdykarim.D@magnum.kz'],
+                                      subject=f'Сбор расхождений по чекам за {end_date}', username=smtp_author, url=smtp_host)
+                            logger.warning(f'ERROR OCCURED: {error}')
                             with suppress(Exception):
                                 os.system('taskkill /im excel.exe')
                             sleep(10)
                             pass
 
-                    Path.unlink(Path(os.path.join(saving_path, 'Secondary machine finished.txt')))
+                    with suppress(Exception):
+                        Path.unlink(Path(os.path.join(saving_path, 'Secondary machine finished.txt')))
 
                     archive_files(end_date)
 
                     smtp_send(r"""Добрый день!
                                 Расхождения, выявленные в отчете 100912 отражены в сводной таблице. Готовые сводные таблицы размещены на сетевой папке M:\Stuff\_06_Бухгалтерия\1. ОК и ЗО\алмата\отчет по контролю касс 2022г\Жадыра Робот; M:\Stuff\_06_Бухгалтерия\1. ОК и ЗО\алмата\отчет по контролю касс 2022г\Ардак Робот""",
-                              to=['Abdykarim.D@magnum.kz', 'Mukhtarova@magnum.kz', 'Sakpankulova@magnum.kz', 'KUSHKEYEVA@magnum.kz', 'Baishukova@magnum.kz'],
+                              to=['Abdykarim.D@magnum.kz', 'Sakpankulova@magnum.kz', 'ABITAKYN@magnum.kz', 'Baishukova@magnum.kz'],
                               subject=f'Сбор расхождений по чекам за {today}', username=smtp_author, url=smtp_host)
                     logger.info('Процесс закончился успешно')
                     failed = False
@@ -943,19 +1014,26 @@ if __name__ == '__main__':
                 break
 
             except Exception as error:
-                if i == 4:
-                    failed = True
-                print(f'Error occured: {error}\nRetried times: {i + 1}')
-                logger.info(f'Error occured: {error}\nRetried times: {i + 1}')
+                with suppress(Exception):
+                    os.system('taskkill /im excel.exe')
+                # if i == 4:
+                #     failed = True
+                # print(f'Error occured: {error}\nRetried times: {i + 1}')
+                # logger.warning(f'Error occured: {error}\nRetried times: {i + 1}')
                 # sleep(2000)
         if failed and ip_address == main_executor:
             # logger.info(f'Робот сломался')
             smtp_send(r"""Добрый день!
             Робот не отработал ни одну из 5 попыток""",
-                      to=['Abdykarim.D@magnum.kz', 'Mukhtarova@magnum.kz', 'Sakpankulova@magnum.kz', 'KUSHKEYEVA@magnum.kz', 'Baishukova@magnum.kz'],
+                      to=['Abdykarim.D@magnum.kz', 'Sakpankulova@magnum.kz', 'ABITAKYN@magnum.kz', 'Baishukova@magnum.kz'],
                       subject=f'Сбор расхождений по чекам за {end_date}', username=smtp_author, url=smtp_host)
 
             logger.warning(f'Робот сломался на дату {end_date} на машине {ip_address}')
 
         elif failed and ip_address != main_executor:
             logger.warning(f'Робот сломался на дату {end_date} на машине {ip_address}')
+
+    with suppress(Exception):
+        sql_delete_table()
+
+
