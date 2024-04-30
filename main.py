@@ -190,7 +190,7 @@ def check_if_store_in_db(store_name):
     conn = psycopg2.connect(host=db_host, port=db_port, database=db_name, user=db_user, password=db_pass)
     table_create_query = f'''
             SELECT * FROM ROBOT.{robot_name.replace("-", "_")}
-            where store_name = '{store_name} and status = 'success'
+            where store_name = '{store_name}' and status = 'success'
             '''
     cur = conn.cursor()
     cur.execute(table_create_query)
@@ -490,7 +490,7 @@ def send_in_cache(today):
     sprut.parent_back(1)
 
     sprut.find_element({"title": " ", "class_name": "TPanel", "control_type": "Pane",
-                        "visible_only": True, "enabled_only": True, "found_index": 0}).click(coords=(20, 17))
+                        "visible_only": True, "enabled_only": True, "found_index": 0}, timeout=600).click(coords=(20, 17))
 
     sprut.find_element({"title": "Журналы", "class_name": "", "control_type": "MenuItem",
                         "visible_only": True, "enabled_only": True, "found_index": 0}).click()
@@ -946,14 +946,17 @@ if __name__ == '__main__':
         logger.warning(f'Робот запустился за дату {today} на машине {ip_address}, дата сохранения отчётов {save_date}')
 
         with suppress(Exception):
+
             if ip_address == main_executor:
-                sql_delete_table()
+
+                with suppress(Exception):
+                    sql_delete_table()
+
+                sql_create_table()
 
         for i in range(5):
 
             try:
-
-                sql_create_table()
 
                 df = pd.read_excel(mapping_path)
 
@@ -965,6 +968,8 @@ if __name__ == '__main__':
                 print(len(branches_to_execute), branches_to_execute)
 
                 send_in_cache(end_date)
+
+                print('Started Z Reports')
 
                 create_z_reports(branches_to_execute, end_date, end_date)
 
@@ -1014,6 +1019,7 @@ if __name__ == '__main__':
                 break
 
             except Exception as error:
+                traceback.print_exc()
                 with suppress(Exception):
                     os.system('taskkill /im excel.exe')
                 # if i == 4:
